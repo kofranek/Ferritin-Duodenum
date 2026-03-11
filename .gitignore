@@ -1,0 +1,11 @@
+# 1. Ignorovat úplně všechno
+*
+
+# 2. Povolit sledování samotného .gitignore (volitelné, ale doporučené)
+!.gitignore
+
+# 3. Povolit procházení všech složek (nutné pro přístup k vnořeným .mo souborům)
+!*/
+
+# 4. Povolit všechny soubory s příponou .mo
+!*.mo
