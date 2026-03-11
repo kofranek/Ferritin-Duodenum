@@ -44,9 +44,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         displayUnit = "mol/L",
         start = 0) "diferric peroxo complex";
 
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer H = 4 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      parameter Integer atoms_per_cage_transient = 1500 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+      //parameter Integer atoms_per_cage_transient = 1500 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
@@ -115,6 +117,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Integer m_mineralization = 8 "Hill coefficient";
 
     equation
+
+      atoms_per_cage_transient = core / FT_cage;
 
       FT_Degradation = k_FTlysis * FT_cage;
 
@@ -1087,9 +1091,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         start = 0) "diferric peroxo complex";
       Bodylight.Types.Concentration FT_cage;
 
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer H = 4 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      parameter Integer atoms_per_cage_transient = 1500 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
@@ -1167,6 +1173,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Fract_Fe_in_Ft = Fe_in_FT / Fe_total;
       Fract_LIP = 1 - Fract_Fe_in_Ft;
+
+      atoms_per_cage_transient = core / FT_cage;
 
       FT_Degradation = k_FTlysis * FT_cage;
 
