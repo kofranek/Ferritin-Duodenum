@@ -1083,7 +1083,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.FractionOutput Fract_LIP annotation (Placement(
             transformation(extent={{-248,-26},{-228,-6}}), iconTransformation(
           extent={{100,-64},{120,-44}})));
-      Bodylight.Types.Concentration Fe_total( start = Fe_total_set);
+      Bodylight.Types.Concentration Fe_total;
 
       Bodylight.Types.Concentration core(
         start = 7.5e-06 * 1e3) "core";
@@ -1102,10 +1102,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Bodylight.Types.Frequency k_FTlysis = 1.203e-05;
 
       parameter Real FT_Expression(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)")
-         = 6.015e-14 * 1000;
+         quantity = "ReactionRate",
+         unit = "mol/(m3.s)",
+         displayUnit = "mol/(l.s)")
+          = 16.015e-14 * 1000;
 
       //FT degradation
       Real FT_Degradation(
@@ -1164,7 +1164,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Integer m_mineralization = 8 "Hill coefficient";
 
     initial equation
-     // FT_cage = FT_cage_in;
+      FT_cage = FT_cage_in;
 
     equation
 
@@ -1214,11 +1214,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
             Text(
               extent={{-24,42},{-88,96}},
               textColor={28,108,200},
-              textString="Fe_total"),
+              textString="Fe_total_set"),
             Text(
               extent={{-22,-70},{-88,-18}},
               textColor={28,108,200},
-              textString="Ft_cage")}));
+              textString="Ft_cage_in")}));
     end FerritinIronStorage;
 
     model Test_FT_storage
@@ -1227,7 +1227,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               "mol/l") = 0.017499704)
         annotation (Placement(transformation(extent={{-94,70},{-86,78}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
-              "mol/l") = 5e-06)
+              "mmol/l") = 1.33125e-05)
         annotation (Placement(transformation(extent={{-94,-44},{-86,-36}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-52,-6},{4,50}})));
