@@ -1089,7 +1089,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         start = 7.5e-06 * 1e3) "core";
       Bodylight.Types.Concentration DFP(
         start = 0) "diferric peroxo complex";
-      Bodylight.Types.Concentration FT_cage;
+      //Bodylight.Types.Concentration FT_cage;
 
       Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
 
@@ -1174,11 +1174,15 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       BodylightExtension.Types.RealIO.MolarReactionRateInput Ft_expressionIn
         annotation (Placement(transformation(extent={{-258,-42},{-218,-2}}),
             iconTransformation(extent={{-120,-12},{-94,14}})));
+      Bodylight.Types.RealIO.ConcentrationOutput FT_cage
+        annotation (Placement(transformation(extent={{-238,50},{-218,70}}),
+            iconTransformation(extent={{102,8},{122,28}})));
     initial equation
       FT_cage = FT_cage_in;
 
     equation
-      FT_Expression = 16.015e-14 * 1000;
+      //FT_Expression = 16.015e-14 * 1000;
+      FT_Expression=Ft_expressionIn;
 
       Fe_in_FT = core + DFP;
       Fe_total = Fe_in_FT + LIP;
@@ -1247,11 +1251,17 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-94,-44},{-86,-36}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-52,-6},{4,50}})));
+      BodylightExtension.Types.Constants.MolarFlowRateConst molarFlowRate(k(
+            displayUnit="m-3.s-1.mol") = 16.015e-14*1000)
+        annotation (Placement(transformation(extent={{-94,20},{-86,28}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-72,74},{-72,41.6},{-53.68,41.6}}, color={0,0,127}));
       connect(FT_cage.y, ferritinIronStorage.FT_cage_in) annotation (Line(
             points={{-85,-40},{-72,-40},{-72,9.4},{-53.96,9.4}}, color={0,0,127}));
+      connect(molarFlowRate.y, ferritinIronStorage.Ft_expressionIn) annotation
+        (Line(points={{-85,24},{-62,24},{-62,22.28},{-53.96,22.28}}, color={0,0,
+              127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_storage;
