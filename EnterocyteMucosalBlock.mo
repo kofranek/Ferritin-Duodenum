@@ -1098,9 +1098,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
 
-      type MolarReactionRate = Real(
-      unit = "mol/(m3.s)",
-      displayUnit = "mmol/(l.s)");
       parameter Integer H = 4 "H subunits";
       parameter Integer L = 24 - H "L subunits";
 
@@ -1257,38 +1254,44 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-94,70},{-86,78}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
               "mmol/l") = 2.33125e-05)
-        annotation (Placement(transformation(extent={{-190,42},{-182,50}})));
+        annotation (Placement(transformation(extent={{-116,20},{-108,28}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-24,-4},{32,52}})));
-      BodylightExtension.Types.Constants.MolarFlowRateConst molarFlowRate(k(
-            displayUnit="m-3.s-1.mol") = 16.015e-14*1000)
-        annotation (Placement(transformation(extent={{-144,16},{-136,24}})));
-      Modelica.Blocks.Math.Product FT_expression_need
-        annotation (Placement(transformation(extent={{-100,14},{-80,34}})));
-      Modelica.Blocks.Math.Division division
-        annotation (Placement(transformation(extent={{-156,32},{-136,52}})));
-      Modelica.Blocks.Math.Gain gain(k=1)
-        annotation (Placement(transformation(extent={{-128,36},{-118,46}})));
+      FerritinLysis ferritinLysis
+        annotation (Placement(transformation(extent={{-84,14},{-64,34}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
-      connect(FT_expression_need.u2, molarFlowRate.y) annotation (Line(points={
-              {-102,18},{-112,18},{-112,20},{-135,20}}, color={0,0,127}));
-      connect(FT_expression_need.y, ferritinIronStorage.Ft_expressionIn)
-        annotation (Line(points={{-79,24},{-36,24},{-36,24.28},{-25.96,24.28}},
-            color={0,0,127}));
-      connect(FT_cage.y, division.u1) annotation (Line(points={{-181,46},{-166,
-              46},{-166,48},{-158,48}}, color={0,0,127}));
-      connect(division.u2, ferritinIronStorage.FT_cage) annotation (Line(points
-            ={{-158,36},{-158,-8},{46,-8},{46,29.04},{35.36,29.04}}, color={0,0,
-              127}));
-      connect(division.y, gain.u) annotation (Line(points={{-135,42},{-132,42},
-              {-132,41},{-129,41}}, color={0,0,127}));
-      connect(gain.y, FT_expression_need.u1) annotation (Line(points={{-117.5,
-              41},{-110,41},{-110,30},{-102,30}}, color={0,0,127}));
+      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-107,
+              24},{-96.15,24},{-96.15,24.1},{-85.3,24.1}}, color={0,0,127}));
+      connect(ferritinLysis.FT_lysis, ferritinIronStorage.Ft_expressionIn)
+        annotation (Line(points={{-63,24},{-44.48,24},{-44.48,24.28},{-25.96,
+              24.28}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_storage;
+
+    model FerritinLysis
+      BodylightExtension.Types.RealIO.MolarReactionRateOutput FT_lysis annotation (
+          Placement(transformation(extent={{106,-130},{126,-110}}),
+            iconTransformation(extent={{100,-10},{120,10}})));
+      Bodylight.Types.RealIO.ConcentrationInput FT_cage annotation (Placement(
+            transformation(extent={{-334,-58},{-294,-18}}), iconTransformation(
+          extent={{-126,-12},{-100,14}})));
+      parameter Bodylight.Types.Frequency k_FTlysis = 1.203e-05;
+    equation
+     FT_lysis = k_FTlysis * FT_cage;
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid), Text(
+              extent={{-110,-106},{110,-124}},
+              textColor={28,108,200},
+              textString="%name")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+
+    end FerritinLysis;
   end models;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
