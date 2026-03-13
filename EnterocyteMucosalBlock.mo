@@ -331,13 +331,17 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //Global Quantities
 
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer H = 24 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      parameter Real atoms_per_cage_transient = 1550.28325867654 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+      //parameter Real atoms_per_cage_transient = 1550.28325867654 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
     equation
+
+      atoms_per_cage_transient = core / FT_cage;
 
       FT_Expression = k_cat_FT_Expression * (1 - IRPs_active ^ n_FT_Expression / (K_FT_Expression ^ n_FT_Expression + IRPs_active ^ n_FT_Expression));
 
@@ -367,6 +371,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       DMT1_Iron_Transport = k_cat_DMT1_Iron_Transport * DMT1 * Fe_lumen ^ n_DMT1_Iron_Transport /
         (K_m_DMT1_Iron_Transport ^ n_DMT1_Iron_Transport + Fe_lumen ^ n_DMT1_Iron_Transport);
 
+      //e-25, must be e-29
       FPN_Inactivation = k_cat_FPN_Inactivation * FPN_active * Fe_blood ^ n_FPN_Inactivation / (K_m_FPN_Inactivation ^ n_FPN_Inactivation + Fe_blood ^ n_FPN_Inactivation);
 
       FPN_Activation = k_cat_FPN_Activation * FPN_internalized;
