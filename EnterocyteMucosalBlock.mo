@@ -1171,6 +1171,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Integer n_mineralization = 4 "Hill coefficient";
       parameter Integer m_mineralization = 8 "Hill coefficient";
 
+      parameter Modelica.Units.SI.MolarConcentration FT_cage_norm(
+        displayUnit = "mol/L") = 1.33125e-05 "FT cage (norm)";
+
+
       BodylightExtension.Types.RealIO.MolarReactionRateInput Ft_expressionIn
         annotation (Placement(transformation(extent={{-258,-42},{-218,-2}}),
             iconTransformation(extent={{-120,-12},{-94,14}})));
@@ -1178,7 +1182,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-238,50},{-218,70}}),
             iconTransformation(extent={{102,8},{122,28}})));
     initial equation
-      FT_cage = FT_cage_in;
+      FT_cage = FT_cage_norm;
 
     equation
       //FT_Expression = 16.015e-14 * 1000;
@@ -1247,21 +1251,32 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               "mol/l") = 0.017499704)
         annotation (Placement(transformation(extent={{-94,70},{-86,78}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
-              "mmol/l") = 1.33125e-05)
-        annotation (Placement(transformation(extent={{-94,-44},{-86,-36}})));
+              "mmol/l") = 2.33125e-05)
+        annotation (Placement(transformation(extent={{-190,42},{-182,50}})));
       FerritinIronStorage ferritinIronStorage
-        annotation (Placement(transformation(extent={{-52,-6},{4,50}})));
+        annotation (Placement(transformation(extent={{-24,-4},{32,52}})));
       BodylightExtension.Types.Constants.MolarFlowRateConst molarFlowRate(k(
             displayUnit="m-3.s-1.mol") = 16.015e-14*1000)
-        annotation (Placement(transformation(extent={{-94,20},{-86,28}})));
+        annotation (Placement(transformation(extent={{-144,16},{-136,24}})));
+      Modelica.Blocks.Math.Product FT_expression_need
+        annotation (Placement(transformation(extent={{-100,14},{-80,34}})));
+      Modelica.Blocks.Math.Division division
+        annotation (Placement(transformation(extent={{-142,30},{-122,50}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
-            points={{-85,74},{-72,74},{-72,41.6},{-53.68,41.6}}, color={0,0,127}));
-      connect(FT_cage.y, ferritinIronStorage.FT_cage_in) annotation (Line(
-            points={{-85,-40},{-72,-40},{-72,9.4},{-53.96,9.4}}, color={0,0,127}));
-      connect(molarFlowRate.y, ferritinIronStorage.Ft_expressionIn) annotation
-        (Line(points={{-85,24},{-62,24},{-62,22.28},{-53.96,22.28}}, color={0,0,
-              127}));
+            points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
+      connect(FT_expression_need.u2, molarFlowRate.y) annotation (Line(points={
+              {-102,18},{-112,18},{-112,20},{-135,20}}, color={0,0,127}));
+      connect(FT_expression_need.y, ferritinIronStorage.Ft_expressionIn)
+        annotation (Line(points={{-79,24},{-36,24},{-36,24.28},{-25.96,24.28}},
+            color={0,0,127}));
+      connect(FT_cage.y, division.u1)
+        annotation (Line(points={{-181,46},{-144,46}}, color={0,0,127}));
+      connect(division.u2, ferritinIronStorage.FT_cage) annotation (Line(points
+            ={{-144,34},{-166,34},{-166,-24},{60,-24},{60,29.04},{35.36,29.04}},
+            color={0,0,127}));
+      connect(division.y, FT_expression_need.u1) annotation (Line(points={{-121,
+              40},{-110,40},{-110,30},{-102,30}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_storage;
