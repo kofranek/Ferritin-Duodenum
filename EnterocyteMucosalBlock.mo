@@ -1266,7 +1266,9 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Modelica.Blocks.Math.Product FT_expression_need
         annotation (Placement(transformation(extent={{-100,14},{-80,34}})));
       Modelica.Blocks.Math.Division division
-        annotation (Placement(transformation(extent={{-142,30},{-122,50}})));
+        annotation (Placement(transformation(extent={{-156,32},{-136,52}})));
+      Modelica.Blocks.Math.Gain gain(k=1)
+        annotation (Placement(transformation(extent={{-128,36},{-118,46}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
@@ -1275,13 +1277,15 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       connect(FT_expression_need.y, ferritinIronStorage.Ft_expressionIn)
         annotation (Line(points={{-79,24},{-36,24},{-36,24.28},{-25.96,24.28}},
             color={0,0,127}));
-      connect(FT_cage.y, division.u1)
-        annotation (Line(points={{-181,46},{-144,46}}, color={0,0,127}));
+      connect(FT_cage.y, division.u1) annotation (Line(points={{-181,46},{-166,
+              46},{-166,48},{-158,48}}, color={0,0,127}));
       connect(division.u2, ferritinIronStorage.FT_cage) annotation (Line(points
-            ={{-144,34},{-166,34},{-166,-24},{60,-24},{60,29.04},{35.36,29.04}},
-            color={0,0,127}));
-      connect(division.y, FT_expression_need.u1) annotation (Line(points={{-121,
-              40},{-110,40},{-110,30},{-102,30}}, color={0,0,127}));
+            ={{-158,36},{-158,-8},{46,-8},{46,29.04},{35.36,29.04}}, color={0,0,
+              127}));
+      connect(division.y, gain.u) annotation (Line(points={{-135,42},{-132,42},
+              {-132,41},{-129,41}}, color={0,0,127}));
+      connect(gain.y, FT_expression_need.u1) annotation (Line(points={{-117.5,
+              41},{-110,41},{-110,30},{-102,30}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_storage;
