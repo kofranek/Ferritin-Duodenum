@@ -1093,6 +1093,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
 
+      type MolarReactionRate = Real(
+      unit = "mol/(m3.s)",
+      displayUnit = "mmol/(l.s)");
+
       parameter Integer H = 4 "H subunits";
       parameter Integer L = 24 - H "L subunits";
 
@@ -1101,11 +1105,16 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       parameter Bodylight.Types.Frequency k_FTlysis = 1.203e-05;
 
-      parameter Real FT_Expression(
-         quantity = "ReactionRate",
-         unit = "mol/(m3.s)",
-         displayUnit = "mol/(l.s)")
-          = 16.015e-14 * 1000;
+      parameter MolarReactionRate FT_Expression = 16.015e-14 * 1000;
+
+    /*    
+    parameter Real FT_Expression(
+     quantity = "ReactionRate",
+     unit = "mol/(m3.s)",
+     displayUnit = "mol/(l.s)")
+    
+    = 16.015e-14 * 1000;
+    */
 
       //FT degradation
       Real FT_Degradation(
