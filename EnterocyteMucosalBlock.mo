@@ -1071,9 +1071,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.ConcentrationInput Fe_total_set annotation (Placement(
             transformation(extent={{-258,-32},{-218,8}}), iconTransformation(extent={{-120,56},
                 {-92,84}})));
-      Bodylight.Types.RealIO.ConcentrationInput FT_cage_in annotation (Placement(
-            transformation(extent={{-258,-32},{-218,8}}), iconTransformation(extent={{-120,
-                -58},{-94,-32}})));
 
       Bodylight.Types.RealIO.ConcentrationOutput Fe_in_FT annotation (Placement(
             transformation(extent={{-248,26},{-228,46}}), iconTransformation(extent
@@ -1173,8 +1170,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Integer n_mineralization = 4 "Hill coefficient";
       parameter Integer m_mineralization = 8 "Hill coefficient";
 
-      parameter Modelica.Units.SI.MolarConcentration FT_cage_norm(
-        displayUnit = "mol/L") = 1.33125e-05 "FT cage (norm)";
+    // parameter Modelica.Units.SI.MolarConcentration FT_cage_norm(
+    //    displayUnit = "mol/L") = 1.33125e-05 "FT cage (norm)";
 
 
       BodylightExtension.Types.RealIO.MolarReactionRateInput Ft_expressionIn
@@ -1184,7 +1181,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-238,50},{-218,70}}),
             iconTransformation(extent={{102,8},{122,28}})));
     initial equation
-      FT_cage = FT_cage_norm;
+     // FT_cage = FT_cage_norm;
 
     equation
       //FT_Expression = 16.015e-14 * 1000;
@@ -1214,7 +1211,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         * K_i_mineralization ^ n_mineralization / (K_i_mineralization ^ n_mineralization + core ^ n_mineralization)
         * (4300 ^ m_mineralization - atoms_per_cage_transient ^ m_mineralization) / 4300 ^ m_mineralization;
 
-      der(FT_cage) = -FT_Degradation + FT_Expression;
+      //der(FT_cage) = -FT_Degradation + FT_Expression;
+      -FT_Degradation + FT_Expression=0;
 
       der(LIP) = -2 * Oxidation + 2 * Reduction + CoreRelease;
 
@@ -1237,10 +1235,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               extent={{-24,42},{-88,96}},
               textColor={28,108,200},
               textString="Fe_total_set"),
-            Text(
-              extent={{-22,-70},{-88,-18}},
-              textColor={28,108,200},
-              textString="Ft_cage_in"),
             Text(
               extent={{-24,-24},{-88,30}},
               textColor={28,108,200},
