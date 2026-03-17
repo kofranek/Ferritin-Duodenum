@@ -537,13 +537,17 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //Global Quantities
 
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer H = 24 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      parameter Real atoms_per_cage_transient = 1550.28325867654 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
     equation
+
+      atoms_per_cage_transient = core / FT_cage;
 
       //10
       FT_Core_Formation = (k_cat_FT_Core_Formation * DFP * core) / (K_m_FT_Core_Formation + DFP)
@@ -1086,6 +1090,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
             transformation(extent={{-248,-26},{-228,-6}}), iconTransformation(
           extent={{100,-64},{120,-44}})));
       Bodylight.Types.Concentration Fe_total;
+      //Bodylight.Types.Concentration Fe_total_need;
 
       Bodylight.Types.Concentration core(
         start = 7.5e-06 * 1e3) "core";
@@ -1180,8 +1185,17 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.ConcentrationOutput FT_cage
         annotation (Placement(transformation(extent={{-238,50},{-218,70}}),
             iconTransformation(extent={{102,8},{122,28}})));
+
+      //How to recaltulato Fe_total
+      //Fe_total_need = Fe_total_set - Fe_total;
+      //core_init = core+Fe_total_need*Fract_Fe_in_Ft;
+      //LIP_init=LIP+Fe_total_need*Fract_LIP;
+
     initial equation
      // FT_cage = FT_cage_norm;
+
+      //Fe_total_need = Fe_total_set - Fe_total;
+      LIP = Fe_total_set - (core + DFP);
 
     equation
       //FT_Expression = 16.015e-14 * 1000;
@@ -1189,6 +1203,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Fe_in_FT = core + DFP;
       Fe_total = Fe_in_FT + LIP;
+      //Fe_total_need = Fe_total_set - Fe_total;
 
       Fract_Fe_in_Ft = Fe_in_FT / Fe_total;
       Fract_LIP = 1 - Fract_Fe_in_Ft;
@@ -1220,6 +1235,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       der(DFP) = Oxidation - Mineralization - Reduction - 2 * Nucleation;
 
+
+
       annotation (Diagram(coordinateSystem(extent={{-100,-100},{100,100}})), Icon(
             coordinateSystem(extent={{-100,-100},{100,100}}), graphics={
             Rectangle(
@@ -1247,19 +1264,19 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               "mol/l") = 0.017499704)
         annotation (Placement(transformation(extent={{-94,70},{-86,78}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
-              "mmol/l") = 2.33125e-05)
+              "mmol/l") = 1.33125e-05)
         annotation (Placement(transformation(extent={{-116,20},{-108,28}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-24,-4},{32,52}})));
       FerritinLysis ferritinLysis
-        annotation (Placement(transformation(extent={{-84,14},{-64,34}})));
+        annotation (Placement(transformation(extent={{-84,12},{-64,32}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
-      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-107,
-              24},{-96.15,24},{-96.15,24.1},{-85.3,24.1}}, color={0,0,127}));
+      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-107,24},
+              {-96.15,24},{-96.15,22.1},{-85.3,22.1}},     color={0,0,127}));
       connect(ferritinLysis.FT_lysis, ferritinIronStorage.Ft_expressionIn)
-        annotation (Line(points={{-63,24},{-44.48,24},{-44.48,24.28},{-25.96,
+        annotation (Line(points={{-63,22},{-44.48,22},{-44.48,24.28},{-25.96,
               24.28}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
