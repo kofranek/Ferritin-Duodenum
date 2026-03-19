@@ -1108,7 +1108,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       parameter Bodylight.Types.Frequency k_FTlysis = 1.203e-05;
 
-      BodylightExtension.Types.MolarReactionRate FT_Expression( start = 16.015e-14 * 1000);
+     // BodylightExtension.Types.MolarReactionRate FT_Expression( start = 16.015e-14 * 1000);
 
     /*    
     parameter Real FT_Expression(
@@ -1179,18 +1179,14 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
     //    displayUnit = "mol/L") = 1.33125e-05 "FT cage (norm)";
 
 
-      BodylightExtension.Types.RealIO.MolarReactionRateInput Ft_expressionIn
-        annotation (Placement(transformation(extent={{-258,-42},{-218,-2}}),
-            iconTransformation(extent={{-120,-12},{-94,14}})));
-      Bodylight.Types.RealIO.ConcentrationOutput FT_cage
-        annotation (Placement(transformation(extent={{-238,50},{-218,70}}),
-            iconTransformation(extent={{102,8},{122,28}})));
-
       //How to recaltulato Fe_total
       //Fe_total_need = Fe_total_set - Fe_total;
       //core_init = core+Fe_total_need*Fract_Fe_in_Ft;
       //LIP_init=LIP+Fe_total_need*Fract_LIP;
 
+      Bodylight.Types.RealIO.ConcentrationInput FT_cage annotation (Placement(
+            transformation(extent={{-258,-32},{-218,8}}), iconTransformation(extent
+              ={{-120,-14},{-92,14}})));
     initial equation
      // FT_cage = FT_cage_norm;
 
@@ -1199,7 +1195,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
     equation
       //FT_Expression = 16.015e-14 * 1000;
-      FT_Expression=Ft_expressionIn;
+      // FT_Expression=Ft_expressionIn;
 
       Fe_in_FT = core + DFP;
       Fe_total = Fe_in_FT + LIP;
@@ -1227,7 +1223,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         * (4300 ^ m_mineralization - atoms_per_cage_transient ^ m_mineralization) / 4300 ^ m_mineralization;
 
       //der(FT_cage) = -FT_Degradation + FT_Expression;
-      -FT_Degradation + FT_Expression=0;
+      //-FT_Degradation + FT_Expression=0;
 
       der(LIP) = -2 * Oxidation + 2 * Reduction + CoreRelease;
 
@@ -1255,7 +1251,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
             Text(
               extent={{-24,-24},{-88,30}},
               textColor={28,108,200},
-              textString="Ft_expression_in")}));
+              textString="FT_cage")}));
     end FerritinIronStorage;
 
     model Test_FT_storage
@@ -1265,19 +1261,18 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-94,70},{-86,78}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
               "mmol/l") = 1.33125e-05)
-        annotation (Placement(transformation(extent={{-116,20},{-108,28}})));
+        annotation (Placement(transformation(extent={{-106,20},{-98,28}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-24,-4},{32,52}})));
       FerritinLysis ferritinLysis
-        annotation (Placement(transformation(extent={{-84,12},{-64,32}})));
+        annotation (Placement(transformation(extent={{-84,-20},{-64,0}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
-      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-107,24},
-              {-96.15,24},{-96.15,22.1},{-85.3,22.1}},     color={0,0,127}));
-      connect(ferritinLysis.FT_lysis, ferritinIronStorage.Ft_expressionIn)
-        annotation (Line(points={{-63,22},{-44.48,22},{-44.48,24.28},{-25.96,
-              24.28}}, color={0,0,127}));
+      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-97,24},
+              {-92,24},{-92,-9.9},{-85.3,-9.9}},           color={0,0,127}));
+      connect(ferritinIronStorage.FT_cage, FT_cage.y)
+        annotation (Line(points={{-25.68,24},{-97,24}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_storage;
