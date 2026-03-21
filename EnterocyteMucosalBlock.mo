@@ -1409,6 +1409,214 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_cageRegulation;
+
+    model FerritinCageBlockShortModel "Enterocyte mucosal block (short)"
+
+      //Compartments
+
+      constant Modelica.Units.SI.Volume cell(
+        displayUnit = "L") = 1.4e-12 * 1e-3;
+
+      //Species
+
+      //cell
+
+      Modelica.Units.SI.MolarConcentration FT_cage(
+        displayUnit = "mol/L",
+        start = 2.375189822e-9 * 1e3) "FT-cage";
+      Modelica.Units.SI.MolarConcentration core(
+        displayUnit = "mol/L",
+        start = 3.682217017e-6 * 1e3) "core";
+      Modelica.Units.SI.MolarConcentration DFP(
+        displayUnit = "mol/L",
+        start = 1.344769304e-10 * 1e3) "diferric peroxo complex";
+      Modelica.Units.SI.MolarConcentration LIP(
+        displayUnit = "mol/L",
+        start = 1.223884748e-7 * 1e3) "labile iron pool";
+      Modelica.Units.SI.MolarConcentration IRPs_active(
+        displayUnit = "mol/L",
+        start = 6.889335935e-11 * 1e3) "iron regulatory proteins (active)";
+      Modelica.Units.SI.MolarConcentration IRPs_inactive(
+        displayUnit = "mol/L",
+        start = 7.264345126e-12 * 1e3) "iron regulatory proteins (inactive)";
+
+      //Reactions
+
+      //FT expression ( -> FT-cage;  IRPs_active)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Expression;
+      EnterocyteMucosalBlock.types.AmountRatePerVolume k_cat_FT_Expression=
+          7.68e-14*1e3;
+      parameter Integer n_FT_Expression = 1;
+      parameter Modelica.Units.SI.MolarConcentration K_FT_Expression(
+        displayUnit = "mol/L") = 1.4e-11 * 1e3;
+
+      //FT degradation (FT-cage -> )
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Degradation;
+      parameter Modelica.Units.SI.Frequency k_FT_Degradation = 5.461499585e-6;
+
+      //FT degradation core release (core -> LIP; FT-cage core)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume
+        FT_Degradation_Core_Release;
+
+      //FT Fe oxidation (2 * LIP -> DFP; FT-cage)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Oxidation;
+      parameter Modelica.Units.SI.Frequency k_cat_FT_Fe_Oxidation = 591;
+      parameter Modelica.Units.SI.MolarConcentration K_m_FT_Fe_Oxidation(
+        displayUnit = "mol/L") = 0.35e-3 * 1e3;
+      parameter Real n_FT_Fe_Oxidation = 1.3;
+
+      //FT Fe Reduction (DFP -> 2 * LIP)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Reduction;
+      parameter Modelica.Units.SI.Frequency k_FT_Fe_Reduction = 0.2605;
+
+      //FT Nucleation (2 * DFP -> 4 * core; FT-cage core)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Nucleation;
+      parameter Modelica.Units.SI.Frequency k_cat_FT_Nucleation = 5e7;
+      parameter Modelica.Units.SI.MolarConcentration K_i_FT_Nucleation(
+        displayUnit = "mol/L") = 0.461598e-3 * 1e3;
+      parameter Integer n_FT_Nucleation = 4;
+
+      //FT core formation (Mineralization) (DFP -> 2 * core; core)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Core_Formation;
+      parameter Modelica.Units.SI.Frequency k_cat_FT_Core_Formation = 0.101564;
+      parameter Modelica.Units.SI.MolarConcentration K_m_FT_Core_Formation(
+        displayUnit = "mol/L") = 5e-06 * 1e3;
+      parameter Modelica.Units.SI.MolarConcentration K_i_FT_Core_Formation(
+        displayUnit = "mol/L") = 4.6458e-3 * 1e3;
+      parameter Integer n_FT_Core_Formation = 4;
+      parameter Integer m_FT_Core_Formation = 8;
+
+      //IRPs degradation (IRPs_active -> IRPs_inactive;  LIP)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume IRPs_Degradation;
+      parameter EnterocyteMucosalBlock.types.SecondOrderRateConstant
+        k_cat_IRPs_Degradation=3.99474*1e-3;
+
+      //IRPs activation (IRPs_inactive -> IRPs_active)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume IRPs_Activation;
+      parameter Modelica.Units.SI.Frequency k_cat_IRPs_Activation = 4.63671e-6;
+
+      //added parameter
+      parameter Bodylight.Types.Frequency k_Fe_total_set_achieve_time=1e-2;
+
+      //Global Quantities
+
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
+      parameter Integer H = 24 "H subunits";
+      parameter Integer L = 24 - H "L subunits";
+
+      parameter Integer rN = 50;
+      parameter Integer rO = 2;
+
+      // Added variables
+      Bodylight.Types.RealIO.ConcentrationInput Fe_total_set annotation (Placement(
+            transformation(extent={{-258,-32},{-218,8}}), iconTransformation(extent={{-122,
+                -12},{-94,16}})));
+      Bodylight.Types.Concentration Fe_total;
+      Bodylight.Types.Concentration Fe_total_need=Fe_total_set - Fe_total;
+      Bodylight.Types.Concentration Fe_in_FT;
+      Bodylight.Types.Fraction Fract_Fe_in_Ft;
+      Bodylight.Types.Fraction Fract_LIP;
+
+
+    equation
+      Fe_in_FT = core + DFP;
+      Fe_total = Fe_in_FT + LIP;
+      Fract_Fe_in_Ft = Fe_in_FT / Fe_total;
+      Fract_LIP = 1 - Fract_Fe_in_Ft;
+
+      atoms_per_cage_transient = core / FT_cage;
+
+      //10
+      FT_Core_Formation = (k_cat_FT_Core_Formation * DFP * core) / (K_m_FT_Core_Formation + DFP)
+        * K_i_FT_Core_Formation ^ n_FT_Core_Formation / (K_i_FT_Core_Formation ^ n_FT_Core_Formation + core ^ n_FT_Core_Formation)
+        * (4300 ^ m_FT_Core_Formation - atoms_per_cage_transient ^ m_FT_Core_Formation) / 4300 ^ m_FT_Core_Formation;
+
+      //11
+      FT_Degradation = k_FT_Degradation * FT_cage;
+
+      //12
+      FT_Degradation_Core_Release = k_FT_Degradation * core;
+
+      //13
+      FT_Expression = k_cat_FT_Expression * (1 - IRPs_active ^ n_FT_Expression / (K_FT_Expression ^ n_FT_Expression + IRPs_active ^ n_FT_Expression));
+
+      //14
+      FT_Fe_Oxidation = (k_cat_FT_Fe_Oxidation * (H + rO) / (24 + rO) * FT_cage * LIP ^ n_FT_Fe_Oxidation)
+        / (K_m_FT_Fe_Oxidation ^ n_FT_Fe_Oxidation + LIP ^ n_FT_Fe_Oxidation);
+
+      //15
+      FT_Fe_Reduction = k_FT_Fe_Reduction * DFP;
+
+      //16
+      FT_Nucleation = k_cat_FT_Nucleation * DFP ^ 2 * FT_cage * (L + rN) / (24 + rN)
+        * K_i_FT_Nucleation ^ n_FT_Nucleation / (K_i_FT_Nucleation ^ n_FT_Nucleation + core ^ n_FT_Nucleation);
+
+      //17
+      IRPs_Activation = k_cat_IRPs_Activation * IRPs_inactive;
+
+      //18
+      IRPs_Degradation = k_cat_IRPs_Degradation * IRPs_active * LIP;
+
+      //cell
+
+      der(FT_cage) * cell = -cell * FT_Degradation + cell * FT_Expression;
+
+      der(core) * cell = 2 * cell * FT_Core_Formation
+        + 4 * cell * FT_Nucleation
+        - cell * FT_Degradation_Core_Release
+      + cell *  Fe_total_need*k_Fe_total_set_achieve_time*Fract_Fe_in_Ft;
+
+
+
+      //der(core) = 2 * Mineralization + 4 * Nucleation - CoreRelease
+      //  + Fe_total_need*k_Fe_total_set_achieve_time*Fract_Fe_in_Ft;
+
+      der(DFP) * cell = -cell * FT_Core_Formation
+        - cell * FT_Fe_Reduction
+        + cell * FT_Fe_Oxidation
+        - 2 * cell * FT_Nucleation;
+
+      der(LIP) * cell = 2 * cell * FT_Fe_Reduction
+        - 2 * cell * FT_Fe_Oxidation
+        + cell * FT_Degradation_Core_Release
+      + cell * Fe_total_need*k_Fe_total_set_achieve_time*Fract_LIP;
+
+
+     // der(LIP) = -2 * Oxidation + 2 * Reduction + CoreRelease
+     //   +Fe_total_need*k_Fe_total_set_achieve_time*Fract_LIP;
+
+
+
+      der(IRPs_active) * cell = cell * IRPs_Activation
+        - cell * IRPs_Degradation;
+
+      der(IRPs_inactive) * cell = -cell * IRPs_Activation
+        + cell * IRPs_Degradation;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid)}),                      Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+    end FerritinCageBlockShortModel;
+
+    model Test_FerritinCageBlockShortModel
+        extends Modelica.Icons.Example;
+      Bodylight.Types.Constants.ConcentrationConst Fe_total(k(displayUnit=
+              "mmol/l") = 0.00380474)
+        annotation (Placement(transformation(extent={{-86,38},{-78,46}})));
+      FerritinCageBlockShortModel ferritinCageBlockShortModel
+        annotation (Placement(transformation(extent={{-44,22},{-2,62}})));
+    equation
+      connect(Fe_total.y, ferritinCageBlockShortModel.Fe_total_set) annotation
+        (Line(points={{-77,42},{-54,42},{-54,42.4},{-45.68,42.4}}, color={0,0,
+              127}));
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+    end Test_FerritinCageBlockShortModel;
   end models;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
