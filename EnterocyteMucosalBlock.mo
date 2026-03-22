@@ -1340,18 +1340,45 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       EnterocyteMucosalBlock.types.AmountRatePerVolume IRPs_Activation;
       parameter Modelica.Units.SI.Frequency k_cat_IRPs_Activation = 4.63671e-6;
     equation
+    //  FT_Degradation = k_FT_Degradation * FT_cage;
+
+    //  FT_Expression = k_cat_FT_Expression * (1 -
+    //    IRPs_active ^ n_FT_Expression
+    //    / (K_FT_Expression ^ n_FT_Expression + IRPs_active ^ n_FT_Expression));
+
+    //  IRPs_Activation = k_cat_IRPs_Activation * IRPs_inactive;
+    //  IRPs_Degradation = k_cat_IRPs_Degradation * IRPs_active * LIP;
+
+    //  der(FT_cage) = FT_Degradation + FT_Expression;
+    //  der(IRPs_active) = IRPs_Activation
+    //    - IRPs_Degradation;
+    //  der(IRPs_inactive) = -IRPs_Activation
+    //    + IRPs_Degradation;
+
+      //11
       FT_Degradation = k_FT_Degradation * FT_cage;
+
+      //13
       FT_Expression = k_cat_FT_Expression * (1 -
         IRPs_active ^ n_FT_Expression
         / (K_FT_Expression ^ n_FT_Expression + IRPs_active ^ n_FT_Expression));
+
+      //17
       IRPs_Activation = k_cat_IRPs_Activation * IRPs_inactive;
+
+      //18
       IRPs_Degradation = k_cat_IRPs_Degradation * IRPs_active * LIP;
 
-      der(FT_cage) = FT_Degradation + FT_Expression;
+      der(FT_cage)  = - FT_Degradation +  FT_Expression;
+
       der(IRPs_active) = IRPs_Activation
         - IRPs_Degradation;
-      der(IRPs_inactive) = -IRPs_Activation
-        + IRPs_Degradation;
+
+      der(IRPs_inactive)  = - IRPs_Activation
+        +  IRPs_Degradation;
+
+
+
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
               Rectangle(
@@ -1395,17 +1422,19 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-40,-82},{-4,-46}})));
       Bodylight.Types.Constants.ConcentrationConst LIP_in(k(displayUnit="mol/l")
            = 0.0001223884748)
-        annotation (Placement(transformation(extent={{-86,-32},{-78,-24}})));
+        annotation (Placement(transformation(extent={{-90,-56},{-82,-48}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage_in(k(displayUnit=
               "mol/l") = 2.375189822e-06)
         annotation (Placement(transformation(extent={{-92,20},{-84,28}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
-      connect(FT_cage_in.y, ferritinIronStorage.FT_cage)
-        annotation (Line(points={{-83,24},{-25.68,24}}, color={0,0,127}));
-      connect(LIP_in.y, fT_cage_regulation.LIP) annotation (Line(points={{-77,
-              -28},{-50,-28},{-50,-52.84},{-40.72,-52.84}}, color={0,0,127}));
+      connect(fT_cage_regulation.FT_cage, ferritinIronStorage.FT_cage)
+        annotation (Line(points={{-3.28,-51.4},{34,-51.4},{34,-98},{-70,-98},{
+              -70,24},{-25.68,24}}, color={0,0,127}));
+      connect(LIP_in.y, fT_cage_regulation.LIP) annotation (Line(points={{-81,
+              -52},{-60.86,-52},{-60.86,-52.84},{-40.72,-52.84}}, color={0,0,
+              127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_cageRegulation;
@@ -1414,8 +1443,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //Compartments
 
-      constant Modelica.Units.SI.Volume cell(
-        displayUnit = "L") = 1.4e-12 * 1e-3;
 
       //Species
 
@@ -1560,27 +1587,27 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //cell
 
-      der(FT_cage) * cell = -cell * FT_Degradation + cell * FT_Expression;
+      der(FT_cage)  = - FT_Degradation +  FT_Expression;
 
-      der(core) * cell = 2 * cell * FT_Core_Formation
-        + 4 * cell * FT_Nucleation
-        - cell * FT_Degradation_Core_Release
-      + cell *  Fe_total_need*k_Fe_total_set_achieve_time*Fract_Fe_in_Ft;
-
+      der(core)  = 2 *  FT_Core_Formation
+        + 4  * FT_Nucleation
+        -  FT_Degradation_Core_Release
+      +   Fe_total_need*k_Fe_total_set_achieve_time*Fract_Fe_in_Ft;
 
 
       //der(core) = 2 * Mineralization + 4 * Nucleation - CoreRelease
       //  + Fe_total_need*k_Fe_total_set_achieve_time*Fract_Fe_in_Ft;
 
-      der(DFP) * cell = -cell * FT_Core_Formation
-        - cell * FT_Fe_Reduction
-        + cell * FT_Fe_Oxidation
-        - 2 * cell * FT_Nucleation;
+      der(DFP)  = - FT_Core_Formation
+        -  FT_Fe_Reduction
+        +  FT_Fe_Oxidation
+        - 2 *  FT_Nucleation;
 
-      der(LIP) * cell = 2 * cell * FT_Fe_Reduction
-        - 2 * cell * FT_Fe_Oxidation
-        + cell * FT_Degradation_Core_Release
-      + cell * Fe_total_need*k_Fe_total_set_achieve_time*Fract_LIP;
+      der(LIP)  = 2  * FT_Fe_Reduction
+        - 2 * FT_Fe_Oxidation
+        +  FT_Degradation_Core_Release
+      + Fe_total_need*k_Fe_total_set_achieve_time*Fract_LIP;
+
 
 
      // der(LIP) = -2 * Oxidation + 2 * Reduction + CoreRelease
@@ -1588,11 +1615,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
 
 
-      der(IRPs_active) * cell = cell * IRPs_Activation
-        - cell * IRPs_Degradation;
+      der(IRPs_active) = IRPs_Activation
+        - IRPs_Degradation;
 
-      der(IRPs_inactive) * cell = -cell * IRPs_Activation
-        + cell * IRPs_Degradation;
+      der(IRPs_inactive)  = - IRPs_Activation
+        +  IRPs_Degradation;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
               Rectangle(
@@ -1615,7 +1642,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         (Line(points={{-77,42},{-54,42},{-54,42.4},{-45.68,42.4}}, color={0,0,
               127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-            coordinateSystem(preserveAspectRatio=false)));
+            coordinateSystem(preserveAspectRatio=false)),
+        experiment(
+          StopTime=4000000,
+          __Dymola_NumberOfIntervals=5000,
+          __Dymola_Algorithm="Dassl"));
     end Test_FerritinCageBlockShortModel;
   end models;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
