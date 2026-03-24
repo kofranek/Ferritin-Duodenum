@@ -22,6 +22,20 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       unit        = "m3/(mol.s)",
       displayUnit = "l/(mol.s)"
       );
+    type FirstOrderRateConstant = Real(
+      quantity    = "FirstOrderRateConstant",
+      unit        = "1/s"
+      );
+    type ThirdOrderRateConstant = Real(
+      quantity    = "ThirdOrderRateConstant",
+      unit        = "m6/(mol2.s)",
+      displayUnit = "l2/(mol2.s)"
+      );
+    type SurfaceRateConstant = Real(
+      quantity    = "SurfaceRateConstant",
+      unit        = "m2/s",
+      displayUnit = "cm2/s"
+      );
   end types;
 
   package models
@@ -48,71 +62,45 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       parameter Integer H = 4 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      //parameter Integer atoms_per_cage_transient = 1500 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
       parameter Modelica.Units.SI.Frequency k_FTlysis = 1.203e-05;
 
-      parameter Real FT_Expression(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)")
-         = 6.015e-14 * 1000;
+      parameter EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Expression = 6.015e-14 * 1000;
 
       //FT degradation
-      Real FT_Degradation(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Degradation;
 
       //FT degradation core release
-      Real CoreRelease(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-          displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume CoreRelease;
 
       //Oxidation (2 LIP -> DFP)
-      Real Oxidation(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
-
-      parameter Modelica.Units.SI.Frequency k_cat_oxidation = 591 "catalytic turnover number";
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Oxidation;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_oxidation = 591 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_m_oxidation(
         displayUnit = "mol/L") = 0.35 "Michaelis constant";
       parameter Real n_oxidation = 1.3 "Hill coefficient)";
 
       //Reduction (DFP -> 2 LIP)
-      Real Reduction(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
-
-      parameter Modelica.Units.SI.Frequency k_deg = 0.2605 "rate constant";
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Reduction;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_deg = 0.2605 "rate constant";
 
       //Nucleation (2 DFP -> 4 core)
-      Real Nucleation(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
-
-      parameter Modelica.Units.SI.Frequency k_cat_nucleation = 5e07 "catalytic turnover number";
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Nucleation;
+      parameter EnterocyteMucosalBlock.types.ThirdOrderRateConstant k_cat_nucleation = 5e7 * 1e-6 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_i_nucleation(
-        displayUnit = "mol/L") = 0.461598 "inhibition constant";
+        displayUnit = "mol/L") = 0.461598e-3 * 1e3 "inhibition constant";
       parameter Integer n_nucleation = 4 "Hill coefficient";
 
       //Mineralization (DFP -> 2 core)
-      Real Mineralization(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
-
-      parameter Modelica.Units.SI.Frequency k_cat_mineralization = 0.101564 "catalytic turnover number";
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Mineralization;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_mineralization = 0.101564 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_m_mineralization(
-        displayUnit = "mol/L") = 5e-03 "Michaelis constant";
+        displayUnit = "mol/L") = 5e-06 * 1e3 "Michaelis constant";
       parameter Modelica.Units.SI.MolarConcentration K_i_mineralization(
-        displayUnit = "mol/L") = 4.6458 "inhibition constant";
+        displayUnit = "mol/L") = 4.6458e-3 * 1e3 "inhibition constant";
       parameter Integer n_mineralization = 4 "Hill coefficient";
       parameter Integer m_mineralization = 8 "Hill coefficient";
 
@@ -145,7 +133,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       der(DFP) = Oxidation - Mineralization - Reduction - 2 * Nucleation;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-        coordinateSystem(preserveAspectRatio=false)));
+        coordinateSystem(preserveAspectRatio=false)),
+        experiment(
+          StopTime=500,
+          Tolerance=1e-07,
+          __Dymola_Algorithm="Dassl"));
 
     end CellularFerritinIronStorageModel;
 
@@ -220,7 +212,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT expression ( -> FT-cage;  IRPs_active)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Expression;
-      EnterocyteMucosalBlock.types.AmountRatePerVolume k_cat_FT_Expression=
+      parameter EnterocyteMucosalBlock.types.AmountRatePerVolume k_cat_FT_Expression=
           7.68e-14*1e3;
       parameter Integer n_FT_Expression = 1;
       parameter Modelica.Units.SI.MolarConcentration K_FT_Expression(
@@ -228,7 +220,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT degradation (FT-cage -> )
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Degradation;
-      parameter Modelica.Units.SI.Frequency k_FT_Degradation = 5.461499585e-6;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_FT_Degradation = 5.461499585e-6;
 
       //FT degradation core release (core -> LIP; FT-cage core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume
@@ -236,25 +228,25 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT Fe oxidation (2 * LIP -> DFP; FT-cage)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Oxidation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Fe_Oxidation = 591;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_FT_Fe_Oxidation = 591;
       parameter Modelica.Units.SI.MolarConcentration K_m_FT_Fe_Oxidation(
         displayUnit = "mol/L") = 0.35e-3 * 1e3;
       parameter Real n_FT_Fe_Oxidation = 1.3;
 
       //FT Fe Reduction (DFP -> 2 * LIP)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Reduction;
-      parameter Modelica.Units.SI.Frequency k_FT_Fe_Reduction = 0.2605;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_FT_Fe_Reduction = 0.2605;
 
       //FT Nucleation (2 * DFP -> 4 * core; FT-cage core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Nucleation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Nucleation = 5e7;
+      parameter EnterocyteMucosalBlock.types.ThirdOrderRateConstant k_cat_FT_Nucleation = 5e7 * 1e-6;
       parameter Modelica.Units.SI.MolarConcentration K_i_FT_Nucleation(
         displayUnit = "mol/L") = 0.461598e-3 * 1e3;
       parameter Integer n_FT_Nucleation = 4;
 
       //FT core formation (Mineralization) (DFP -> 2 * core; core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Core_Formation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Core_Formation = 0.101564;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_FT_Core_Formation = 0.101564;
       parameter Modelica.Units.SI.MolarConcentration K_m_FT_Core_Formation(
         displayUnit = "mol/L") = 5e-06 * 1e3;
       parameter Modelica.Units.SI.MolarConcentration K_i_FT_Core_Formation(
@@ -269,11 +261,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //IRPs activation (IRPs_inactive -> IRPs_active)
       EnterocyteMucosalBlock.types.AmountRatePerVolume IRPs_Activation;
-      parameter Modelica.Units.SI.Frequency k_cat_IRPs_Activation = 4.63671e-6;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_IRPs_Activation = 4.63671e-6;
 
       //Body Sequestration (Fe_blood -> body_fe)
       EnterocyteMucosalBlock.types.AmountRatePerVolume Body_Sequestration;
-      parameter Modelica.Units.SI.Frequency k_cat_Body_Sequestration = 0.329e-3;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_Body_Sequestration = 0.329e-3;
 
       //Fe Basal Uptake (Fe_blood -> LIP)
       Modelica.Units.SI.MolarFlowRate Fe_Basal_Uptake;
@@ -289,7 +281,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //DMT1 endocytosis free (DMT1 -> DMT1_vesicular)
       EnterocyteMucosalBlock.types.AmountFluxPerArea DMT1_Endocytosis_Free;
-      parameter Modelica.Units.SI.Frequency k_cat_DMT1_Endocytosis_Free = 29.4233;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_DMT1_Endocytosis_Free = 29.4233;
 
       //DMT1 endocytosis LIP modified (DMT1 -> DMT1_vesicular;  LIP)
       Modelica.Units.SI.MolarFlowRate DMT1_Endocytosis_Modified;
@@ -301,18 +293,18 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //DMT1 fusion (DMT1_vesicular -> DMT1;  DMT1)
       EnterocyteMucosalBlock.types.AmountFluxPerArea DMT1_Fusion;
-      parameter Modelica.Units.SI.Frequency k_cat_DMT1_Fusion = 48.9989;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_DMT1_Fusion = 48.9989;
 
       //DMT1 iron transport (Fe_lumen -> LIP;  DMT1)
       EnterocyteMucosalBlock.types.AmountFluxPerArea DMT1_Iron_Transport;
-      parameter Modelica.Units.SI.Frequency k_cat_DMT1_Iron_Transport = 6844.7;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_DMT1_Iron_Transport = 6844.7;
       parameter Modelica.Units.SI.MolarConcentration K_m_DMT1_Iron_Transport(
         displayUnit = "mol/L") = 2.835 * 1e3;
       parameter Integer n_DMT1_Iron_Transport = 1;
 
       //FPN-inactivation (FPN_active -> FPN_internalized;  Fe_blood)
       Modelica.Units.SI.MolarFlowRate FPN_Inactivation;
-      parameter Modelica.Units.SI.Frequency k_cat_FPN_Inactivation = 1.44264e-6;
+      parameter EnterocyteMucosalBlock.types.SurfaceRateConstant k_cat_FPN_Inactivation = 1.44264e-6 * 1e-4;
       parameter Modelica.Units.SI.MolarConcentration K_m_FPN_Inactivation(
         displayUnit = "mol/L") = 1.22073e-5 * 1e3;
       parameter Real n_FPN_Inactivation = 2.71609;
@@ -324,7 +316,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FPN iron transport (LIP -> Fe_blood;  FPN_active)
       EnterocyteMucosalBlock.types.AmountFluxPerArea FPN_Iron_Transport;
-      parameter Modelica.Units.SI.Frequency k_cat_FPN_Iron_Transport = 1.88317;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_FPN_Iron_Transport = 1.88317;
       parameter Modelica.Units.SI.MolarConcentration K_m_FPN_Iron_Transport(
         displayUnit = "mol/L") = 2.31608e-6 * 1e3;
       parameter Integer n_FPN_Iron_Transport = 1;
@@ -335,7 +327,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       parameter Integer H = 24 "H subunits";
       parameter Integer L = 24 - H "L subunits";
-      //parameter Real atoms_per_cage_transient = 1550.28325867654 "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
@@ -371,7 +363,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       DMT1_Iron_Transport = k_cat_DMT1_Iron_Transport * DMT1 * Fe_lumen ^ n_DMT1_Iron_Transport /
         (K_m_DMT1_Iron_Transport ^ n_DMT1_Iron_Transport + Fe_lumen ^ n_DMT1_Iron_Transport);
 
-      //e-25, must be e-29
       FPN_Inactivation = k_cat_FPN_Inactivation * FPN_active * Fe_blood ^ n_FPN_Inactivation / (K_m_FPN_Inactivation ^ n_FPN_Inactivation + Fe_blood ^ n_FPN_Inactivation);
 
       FPN_Activation = k_cat_FPN_Activation * FPN_internalized;
@@ -484,7 +475,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT expression ( -> FT-cage;  IRPs_active)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Expression;
-      EnterocyteMucosalBlock.types.AmountRatePerVolume k_cat_FT_Expression=
+      parameter EnterocyteMucosalBlock.types.AmountRatePerVolume k_cat_FT_Expression=
           7.68e-14*1e3;
       parameter Integer n_FT_Expression = 1;
       parameter Modelica.Units.SI.MolarConcentration K_FT_Expression(
@@ -492,7 +483,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT degradation (FT-cage -> )
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Degradation;
-      parameter Modelica.Units.SI.Frequency k_FT_Degradation = 5.461499585e-6;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_FT_Degradation = 5.461499585e-6;
 
       //FT degradation core release (core -> LIP; FT-cage core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume
@@ -500,25 +491,25 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //FT Fe oxidation (2 * LIP -> DFP; FT-cage)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Oxidation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Fe_Oxidation = 591;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_FT_Fe_Oxidation = 591;
       parameter Modelica.Units.SI.MolarConcentration K_m_FT_Fe_Oxidation(
         displayUnit = "mol/L") = 0.35e-3 * 1e3;
       parameter Real n_FT_Fe_Oxidation = 1.3;
 
       //FT Fe Reduction (DFP -> 2 * LIP)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Fe_Reduction;
-      parameter Modelica.Units.SI.Frequency k_FT_Fe_Reduction = 0.2605;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_FT_Fe_Reduction = 0.2605;
 
       //FT Nucleation (2 * DFP -> 4 * core; FT-cage core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Nucleation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Nucleation = 5e7;
+      parameter EnterocyteMucosalBlock.types.ThirdOrderRateConstant k_cat_FT_Nucleation = 5e7 * 1e-6;
       parameter Modelica.Units.SI.MolarConcentration K_i_FT_Nucleation(
         displayUnit = "mol/L") = 0.461598e-3 * 1e3;
       parameter Integer n_FT_Nucleation = 4;
 
       //FT core formation (Mineralization) (DFP -> 2 * core; core)
       EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Core_Formation;
-      parameter Modelica.Units.SI.Frequency k_cat_FT_Core_Formation = 0.101564;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_FT_Core_Formation = 0.101564;
       parameter Modelica.Units.SI.MolarConcentration K_m_FT_Core_Formation(
         displayUnit = "mol/L") = 5e-06 * 1e3;
       parameter Modelica.Units.SI.MolarConcentration K_i_FT_Core_Formation(
@@ -533,7 +524,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       //IRPs activation (IRPs_inactive -> IRPs_active)
       EnterocyteMucosalBlock.types.AmountRatePerVolume IRPs_Activation;
-      parameter Modelica.Units.SI.Frequency k_cat_IRPs_Activation = 4.63671e-6;
+      parameter EnterocyteMucosalBlock.types.FirstOrderRateConstant k_cat_IRPs_Activation = 4.63671e-6;
 
       //Global Quantities
 
@@ -1129,16 +1120,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
  */
 
       //FT degradation core release
-      Real CoreRelease(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-          displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume CoreRelease;
 
       //Oxidation (2 LIP -> DFP)
-      Real Oxidation(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Oxidation;
 
       parameter Modelica.Units.SI.Frequency k_cat_oxidation = 591 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_m_oxidation(
@@ -1146,29 +1131,20 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Real n_oxidation = 1.3 "Hill coefficient)";
 
       //Reduction (DFP -> 2 LIP)
-      Real Reduction(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Reduction;
 
       parameter Modelica.Units.SI.Frequency k_deg = 0.2605 "rate constant";
 
       //Nucleation (2 DFP -> 4 core)
-      Real Nucleation(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Nucleation;
 
-      parameter Modelica.Units.SI.Frequency k_cat_nucleation = 5e07 "catalytic turnover number";
+      parameter EnterocyteMucosalBlock.types.ThirdOrderRateConstant k_cat_nucleation = 5e07 * 1e-6 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_i_nucleation(
         displayUnit = "mol/L") = 0.461598 "inhibition constant";
       parameter Integer n_nucleation = 4 "Hill coefficient";
 
       //Mineralization (DFP -> 2 core)
-      Real Mineralization(
-        quantity = "ReactionRate",
-        unit = "mol/(m3.s)",
-        displayUnit = "mol/(l.s)");
+      EnterocyteMucosalBlock.types.AmountRatePerVolume Mineralization;
 
       parameter Modelica.Units.SI.Frequency k_cat_mineralization = 0.101564 "catalytic turnover number";
       parameter Modelica.Units.SI.MolarConcentration K_m_mineralization(
@@ -1494,6 +1470,9 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Bodylight.Types.Frequency k_FT_Fe_Reduction = 0.2605;
 
       //FT Nucleation (2 * DFP -> 4 * core; FT-cage core)
+      EnterocyteMucosalBlock.types.AmountRatePerVolume FT_Nucleation;
+      parameter EnterocyteMucosalBlock.types.ThirdOrderRateConstant k_cat_FT_Nucleation = 5e7 * 1e-6;
+      parameter Modelica.Units.SI.MolarConcentration K_i_FT_Nucleation(
       BodylightExtension.Types.MolarReactionRate FT_Nucleation;
       parameter Bodylight.Types.Frequency k_cat_FT_Nucleation = 5e7;
       parameter Bodylight.Types.Concentration K_i_FT_Nucleation(
