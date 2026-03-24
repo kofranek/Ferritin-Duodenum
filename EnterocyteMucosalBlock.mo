@@ -1094,7 +1094,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Bodylight.Types.Concentration core(
         start = 7.5e-06 * 1e3) "core";
-      Bodylight.Types.Concentration DFPF(
+      Bodylight.Types.Concentration DFP(
         start = 0) "diferric peroxo complex";
       //Bodylight.Types.Concentration FT_cage;
 
@@ -1277,13 +1277,9 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-106,20},{-98,28}})));
       FerritinIronStorage ferritinIronStorage
         annotation (Placement(transformation(extent={{-24,-4},{32,52}})));
-      FerritinLysis ferritinLysis
-        annotation (Placement(transformation(extent={{-84,-20},{-64,0}})));
     equation
       connect(Fe_total.y, ferritinIronStorage.Fe_total_set) annotation (Line(
             points={{-85,74},{-36,74},{-36,43.6},{-25.68,43.6}}, color={0,0,127}));
-      connect(FT_cage.y, ferritinLysis.FT_cage) annotation (Line(points={{-97,24},
-              {-92,24},{-92,-9.9},{-85.3,-9.9}},           color={0,0,127}));
       connect(ferritinIronStorage.FT_cage, FT_cage.y)
         annotation (Line(points={{-25.68,24},{-97,24}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
@@ -1422,7 +1418,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-40,-82},{-4,-46}})));
       Bodylight.Types.Constants.ConcentrationConst LIP_in(k(displayUnit="mol/l")
            = 0.0001223884748)
-        annotation (Placement(transformation(extent={{-90,-56},{-82,-48}})));
+        annotation (Placement(transformation(extent={{-98,-58},{-90,-50}})));
       Bodylight.Types.Constants.ConcentrationConst FT_cage_in(k(displayUnit=
               "mol/l") = 2.375189822e-06)
         annotation (Placement(transformation(extent={{-92,20},{-84,28}})));
@@ -1432,9 +1428,9 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       connect(fT_cage_regulation.FT_cage, ferritinIronStorage.FT_cage)
         annotation (Line(points={{-3.28,-51.4},{34,-51.4},{34,-98},{-70,-98},{
               -70,24},{-25.68,24}}, color={0,0,127}));
-      connect(LIP_in.y, fT_cage_regulation.LIP) annotation (Line(points={{-81,
-              -52},{-60.86,-52},{-60.86,-52.84},{-40.72,-52.84}}, color={0,0,
-              127}));
+      connect(ferritinIronStorage.LIP, fT_cage_regulation.LIP) annotation (Line(
+            points={{34.8,35.76},{62,35.76},{62,-30},{-58,-30},{-58,-52.84},{
+              -40.72,-52.84}}, color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_FT_cageRegulation;
