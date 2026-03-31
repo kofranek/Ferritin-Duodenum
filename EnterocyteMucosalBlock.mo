@@ -1399,13 +1399,13 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
             Text(
               extent={{26,-56},{92,-68}},
               textColor={28,108,200},
-              textString="Fract_LIP1",
-              horizontalAlignment=TextAlignment.Right),
+              horizontalAlignment=TextAlignment.Right,
+              textString="Fract_LIP"),
             Text(
               extent={{-86,30},{22,16}},
               textColor={28,108,200},
-              textString="Fe_total",
-              horizontalAlignment=TextAlignment.Left),
+              horizontalAlignment=TextAlignment.Left,
+              textString="Fe_total_norm"),
             Text(
               extent={{-90,-28},{14,-40}},
               textColor={28,108,200},
@@ -1416,7 +1416,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
     model Test_FerritinCageBlockShortModel_withOutputs
         extends Modelica.Icons.Example;
-      Bodylight.Types.Constants.ConcentrationConst Fe_total(k(displayUnit=
+      Bodylight.Types.Constants.ConcentrationConst Fe_total_norm(k(displayUnit=
               "mmol/l") = 0.00380474)
         annotation (Placement(transformation(extent={{-92,24},{-84,32}})));
       FerritinCageBlockShortModel_withOutputs
@@ -1425,7 +1425,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.Constants.FractionConst fraction(k=1)
         annotation (Placement(transformation(extent={{-92,-6},{-84,2}})));
     equation
-      connect(Fe_total.y, ferritinCageBlockShortModel_withOutputs.Fe_total_set)
+      connect(Fe_total_norm.y, ferritinCageBlockShortModel_withOutputs.Fe_total_set)
         annotation (Line(points={{-83,28},{-64.5,28},{-64.5,28.76},{-46,28.76}},
             color={0,0,127}));
       connect(fraction.y, ferritinCageBlockShortModel_withOutputs.Fe_total_fract)
