@@ -1271,10 +1271,11 @@ package FeMetabolism
     Bodylight.Types.RealIO.MassFlowRateInput transfusion_SI annotation (Placement(
           transformation(extent={{-160,44},{-120,84}}),  iconTransformation(
             extent={{-132,-74},{-98,-40}})));
-    Bodylight.Types.RealIO.MassOutput Fe_RBC_SI( start=1016.720) annotation (Placement(
+    Bodylight.Types.RealIO.MassOutput Fe_RBC_SI( start=1016.720*1E-12) annotation (Placement(
           transformation(extent={{104,22},{124,42}}),     iconTransformation(
           extent={{100,72},{120,92}})));
     //Real Fe_RBC(start=1016.720,unit="ug") "Fe amount in red blood cells (s6)";
+    //ug to SI -> microgram  to kg = *1E-12
     Bodylight.Types.RealIO.MassFlowRateOutput Fe_RBC_out_spl_SI annotation (
         Placement(transformation(extent={{104,-10},{124,10}}),
           iconTransformation(extent={{100,50},{120,70}})));
@@ -1283,6 +1284,7 @@ package FeMetabolism
       0.002 = value for trace exp., 0.004/0.005";
   equation
     der(Fe_RBC_SI) = Fe_RBC_in_bm_SI - Fe_RBC_out_spl_SI - bleeding_SI + transfusion_SI;
+    Fe_RBC_out_spl_SI = v_spl_1/3600*Fe_RBC_SI "Fe flow from RBC to spleen";
     annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
             extent={{100,-100},{-100,100}},
@@ -1300,8 +1302,7 @@ package FeMetabolism
 
 
 
-   // Fe_RBC_out_spl_SI = v_spl_1/3600*Fe_RBC_SI "Fe flow from RBC to spleen";
-                                                                                         //eq 13.
+    //v_spl_1 was converted from 1/hour to 1/s                                                                                       //eq 13.
 
   end Red_Blood_Cells;
 
@@ -1392,7 +1393,7 @@ package FeMetabolism
     connect(red_Blood_Cells.transfusion_SI, Transfusion.y) annotation (Line(
           points={{60.5,-5.7},{-6,-5.7},{-6,12},{-9,12}}, color={0,0,127}));
     connect(bone_Marrow.Fe_bm_out_RBC_SI, red_Blood_Cells.Fe_RBC_in_bm_SI)
-      annotation (Line(points={{41,-19.4},{52,-19.4},{52,3.9},{60.5,3.9}},
+      annotation (Line(points={{41,-19.4},{52,-19.4},{52,6.5},{60.7,6.5}},
           color={0,0,127}));
     annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
