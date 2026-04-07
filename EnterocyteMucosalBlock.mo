@@ -1439,5 +1439,330 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
           __Dymola_Algorithm="Dassl"));
     end Test_FerritinCageBlockShortModel_withOutputs;
   end models;
+
+  package FeMetabolism
+    model Serum
+      Bodylight.Types.RealIO.MassFlowRateInput Liver_in "Fe input from liver" annotation (
+          Placement(transformation(extent={{-120,72},{-92,100}}),
+            iconTransformation(extent={{-120,72},{-92,100}})));
+      Bodylight.Types.RealIO.MassFlowRateInput Spleen_in "Fe input from spleen" annotation
+        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+              extent={{-120,42},{-92,70}})));
+      Bodylight.Types.RealIO.MassFlowRateInput Duodenum_in "Fe input from duodenum" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
+            iconTransformation(extent={{-120,12},{-92,40}})));
+      Bodylight.Types.RealIO.MassFlowRateInput OtherOrgans_in "Fe input from other organs" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
+            iconTransformation(extent={{-120,-18},{-92,10}})));
+
+      Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate"
+        annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
+            iconTransformation(extent={{-118,-68},{-90,-40}})));
+      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation
+        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+          extent={{-118,-100},{-90,-72}})));
+
+      Bodylight.Types.RealIO.MassFlowRateOutput Liver_out "Fe output to liver" annotation (
+          Placement(transformation(extent={{96,76},{116,96}}), iconTransformation(
+              extent={{96,76},{116,96}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput BoneMarrow_out "Fe output to bone marrow" annotation (Placement(transformation(extent={{96,70},{116,90}}),
+            iconTransformation(extent={{96,50},{116,70}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Duodenum_out "Fe output to bone duodenum" annotation (Placement(transformation(extent={{96,70},{116,90}}),
+            iconTransformation(extent={{96,24},{116,44}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput OtherOrgans_out "Fe output to other organs" annotation (Placement(transformation(extent={{96,70},{116,90}}),
+          iconTransformation(extent={{96,-2},{116,18}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 1.51304 * 1e-6,
+        displayUnit = "ug") "Fe ammount in serum (s1)";
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe ammount in serum: input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe ammount in serum: output";
+
+      parameter Bodylight.Types.Mass th(
+        displayUnit = "ug") = 2.6870 * 1e-6 "Threshold serum iron value (k26), 2.08/3.00";
+      parameter Bodylight.Types.Frequency v_liv_1(
+        displayUnit = "h-1") = 3.9607 / (60 * 60) "Low liver iron uptake (k4), 2.78/9.81";
+      parameter Bodylight.Types.Frequency v_liv_2(
+        displayUnit="h-1") = 14.3810 / (60 * 60) "High liver iron uptake (k45)"; //!!! Inconsistecy xml model vs. paper !!!, xml model value adopted;
+      parameter Bodylight.Types.Frequency v_bm(
+        displayUnit="h-1") = 2.8256 / (60 * 60) "Bone marrow uptake rate (k5), 2.66/4.16";
+      parameter Bodylight.Types.Frequency v_duo(
+        displayUnit="h-1") = 0.70485 / (60 * 60) "Duodenal uptake rate from blood (k6), 0.6/1.3";
+      parameter Bodylight.Types.Frequency v_res(
+        displayUnit="h-1") = 6.3206 / (60 * 60) "Other organs uptake rate (k34), 5.4/10.0";
+
+    initial equation
+
+      der(Fe) = 0; // eq 16.
+
+    equation
+
+      Liver_out = v_liv_1 * min(Fe, th) + v_liv_2 * max(Fe - th, 0);
+
+      BoneMarrow_out = v_bm * Fe;
+
+      Duodenum_out = v_duo * Fe;
+
+      OtherOrgans_out = v_res * Fe;
+
+      Fe_input = Liver_in + Spleen_in + Duodenum_in + OtherOrgans_in + Transfusion;
+      Fe_output = Liver_out + BoneMarrow_out + Duodenum_out + OtherOrgans_out + Bleeding;
+
+      der(Fe) = Fe_input - Fe_output;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+            Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-48,8},{72,-58}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-100,94},{-48,78}},
+              textColor={28,108,200},
+              textString="Liver"),
+            Text(
+              extent={{-96,62},{-40,46}},
+              textColor={28,108,200},
+              textString="Spleen"),
+            Text(
+              extent={{-88,36},{-26,12}},
+              textColor={28,108,200},
+              textString="Duodenum"),
+            Text(
+              extent={{-104,8},{-36,-20}},
+              textColor={28,108,200},
+              textString="Other
+organs"),   Text(
+              extent={{46,90},{96,74}},
+              textColor={28,108,200},
+              textString="Liver"),
+            Text(
+              extent={{34,74},{106,46}},
+              textColor={28,108,200},
+              textString="Bone
+marrow"),   Text(
+              extent={{26,42},{98,28}},
+              textColor={28,108,200},
+              textString="Duodenum"),
+            Text(
+              extent={{32,22},{104,-8}},
+              textColor={28,108,200},
+              textString="Other
+organs"),   Text(
+              extent={{-88,-44},{-28,-64}},
+              textColor={28,108,200},
+              textString="transfusion"),
+            Text(
+              extent={{-92,-78},{-38,-92}},
+              textColor={28,108,200},
+              textString="bleeding")}),
+                Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end Serum;
+
+    model Test_Serum
+                     extends Modelica.Icons.Example;
+      Serum serum
+        annotation (Placement(transformation(extent={{-34,-18},{28,40}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_liver(k(displayUnit=
+              "ug.h-1") = 1.6646425e-12)
+        annotation (Placement(transformation(extent={{-96,54},{-82,66}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_spleen(k(displayUnit=
+              "ug.h-1") = 1.1875712777778e-12)
+        annotation (Placement(transformation(extent={{-96,36},{-82,48}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_duodenum(k(displayUnit=
+              "ug.h-1") = 7.2935111111111e-13)
+        annotation (Placement(transformation(extent={{-96,18},{-82,30}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_otherorgans(k(displayUnit=
+              "ug.h-1") = 2.223375e-12)
+        annotation (Placement(transformation(extent={{-96,2},{-82,14}})));
+      Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
+              "ug.h-1") = 0)
+        annotation (Placement(transformation(extent={{-96,-16},{-82,-4}})));
+      Bodylight.Types.Constants.MassFlowRateConst bleeding(k(displayUnit=
+              "ug.h-1") = 0)
+        annotation (Placement(transformation(extent={{-96,-34},{-82,-22}})));
+    equation
+      connect(Fe_spleen.y, serum.Spleen_in) annotation (Line(points={{-80.25,42},
+              {-46,42},{-46,27.24},{-35.86,27.24}}, color={0,0,127}));
+      connect(Fe_duodenum.y, serum.Duodenum_in) annotation (Line(points={{
+              -80.25,24},{-46,24},{-46,18.54},{-35.86,18.54}}, color={0,0,127}));
+      connect(Fe_otherorgans.y, serum.OtherOrgans_in) annotation (Line(points={
+              {-80.25,8},{-44,8},{-44,9.84},{-35.86,9.84}}, color={0,0,127}));
+      connect(Fe_liver.y, serum.Liver_in) annotation (Line(points={{-80.25,60},
+              {-44,60},{-44,35.94},{-35.86,35.94}}, color={0,0,127}));
+      connect(transfusion.y, serum.Transfusion) annotation (Line(points={{
+              -80.25,-10},{-46,-10},{-46,-4.66},{-35.24,-4.66}}, color={0,0,127}));
+      connect(bleeding.y, serum.Bleeding) annotation (Line(points={{-80.25,-28},
+              {-44,-28},{-44,-13.94},{-35.24,-13.94}}, color={0,0,127}));
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+    end Test_Serum;
+
+    model BoneMarrow
+      Bodylight.Types.RealIO.MassFlowRateInput Serum_in "Fe input from serum" annotation (
+          Placement(transformation(extent={{-120,-14},{-92,14}}),
+            iconTransformation(extent={{-120,-14},{-92,14}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput RBC_out "Fe output to RBC"
+        annotation (Placement(transformation(extent={{96,76},{116,96}}),
+            iconTransformation(extent={{96,10},{116,30}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out "Fe output to spleen"
+        annotation (Placement(transformation(extent={{96,76},{116,96}}),
+            iconTransformation(extent={{96,-30},{116,-10}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 63.1596 * 1e-6,
+        displayUnit = "ug") "Fe ammount in bones (s3)";
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe ammount in bones: input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe ammount in bones: output";
+
+      parameter Bodylight.Types.Frequency v_RBC(
+        displayUnit="h-1") = 0.058008 / (60 * 60) "RBC uptake rate (k8), 0.055/0.075"; // !!! Problem u rovnice (14) - doplnit prvni term na prave strane
+      parameter Bodylight.Types.Frequency v_spl_2(
+        displayUnit="h-1") = 0.0096817 / (60 * 60) "Spleen iron uptake rate from bones (k7), 0.008/0.019";
+
+    initial equation
+
+      der(Fe) = 0; // eq 12.
+
+    equation
+
+      RBC_out = v_RBC * Fe;
+      Spleen_out = v_spl_2 * Fe;
+
+      Fe_input = Serum_in;
+      Fe_output = RBC_out + Spleen_out;
+
+      der(Fe) = Fe_input - Fe_output;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+            Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-62,-24},{58,-90}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-92,8},{-40,-8}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{46,28},{98,12}},
+              textColor={28,108,200},
+              textString="RBC"),
+            Text(
+              extent={{42,-12},{94,-28}},
+              textColor={28,108,200},
+              textString="Spleen")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end BoneMarrow;
+
+    model Test_BoneMarrow
+                          extends Modelica.Icons.Example
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+      BoneMarrow boneMarrow
+        annotation (Placement(transformation(extent={{-28,-28},{30,32}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_serum(k(displayUnit=
+              "ug.h-1") = 1.1875712777778e-12)
+        annotation (Placement(transformation(extent={{-92,-4},{-78,8}})));
+    equation
+      connect(Fe_serum.y, boneMarrow.Serum_in)
+        annotation (Line(points={{-76.25,2},{-29.74,2}}, color={0,0,127}));
+    end Test_BoneMarrow;
+
+    model RBC
+      Bodylight.Types.RealIO.MassFlowRateInput BoneMarrow_in "Fe input from bone marrow" annotation (Placement(transformation(extent={{-120,
+                72},{-92,100}}), iconTransformation(extent={{-120,58},{-92,86}})));
+      Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
+            iconTransformation(extent={{-120,-52},{-92,-24}})));
+      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation
+        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+          extent={{-120,-90},{-92,-62}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out "Fe output to spleen" annotation (Placement(transformation(extent={{96,76},{116,96}}),
+            iconTransformation(extent={{94,-10},{114,10}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 63.1596 * 1e-6,
+        displayUnit = "ug") "Fe ammount in bones (s3)";
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe ammount in bones: input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe ammount in bones: output";
+
+      parameter Bodylight.Types.Frequency v_spl_1(
+        displayUnit = "h-1") = 0.0036035 / (60 * 60) "Spleen iron uptake rate from RBC (k10), 0.002 = value for trace exp., 0.004/0.005";
+
+    initial equation
+
+      der(Fe) = 0; // eq 13.
+
+    equation
+
+      Spleen_out = v_spl_1 * Fe;
+
+      Fe_input = BoneMarrow_in + Transfusion;
+      Fe_output = Spleen_out + Bleeding;
+
+      der(Fe) = Fe_input - Fe_output;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+            Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-60,72},{60,6}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-88,80},{-18,62}},
+              textColor={28,108,200},
+              textString="Bone marrow"),
+            Text(
+              extent={{-86,-28},{-26,-48}},
+              textColor={28,108,200},
+              textString="transfusion"),
+            Text(
+              extent={{-88,-68},{-34,-82}},
+              textColor={28,108,200},
+              textString="bleeding"),
+            Text(
+              extent={{40,8},{92,-8}},
+              textColor={28,108,200},
+              textString="Spleen")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end RBC;
+
+    model Test_RBC
+                   extends Modelica.Icons.Example
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+      RBC rBC annotation (Placement(transformation(extent={{-34,-20},{26,40}})));
+      Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
+              "ug.h-1") = 0)
+        annotation (Placement(transformation(extent={{-98,-6},{-84,6}})));
+      Bodylight.Types.Constants.MassFlowRateConst bleeding(k(displayUnit=
+              "ug.h-1") = 0)
+        annotation (Placement(transformation(extent={{-98,-22},{-84,-10}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_bm(k(displayUnit="ug.h-1")
+           = 1.0177121666667e-12)
+        annotation (Placement(transformation(extent={{-98,26},{-84,38}})));
+    equation
+      connect(transfusion.y, rBC.Transfusion) annotation (Line(points={{-82.25,
+              0},{-30,0},{-30,-1.4},{-35.8,-1.4}}, color={0,0,127}));
+      connect(bleeding.y, rBC.Bleeding) annotation (Line(points={{-82.25,-16},{
+              -40,-16},{-40,-12.8},{-35.8,-12.8}}, color={0,0,127}));
+      connect(Fe_bm.y, rBC.BoneMarrow_in) annotation (Line(points={{-82.25,32},
+              {-32.025,32},{-32.025,31.6},{-35.8,31.6}}, color={0,0,127}));
+    end Test_RBC;
+  end FeMetabolism;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
