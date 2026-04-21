@@ -35,6 +35,284 @@ package BodylightExtension
       unit        = "m6/(mol2.s)",
       displayUnit = "l2/(mol2.s)"
       );
+    type ReverseMass       = Real(
+      quantity="ReverseMass",
+      unit = "1/kg",
+      displayUnit = "1/ug"
+      );
+    type MassSpecificRate       = Real(
+      quantity="MassSpecificRate",
+      unit = "1/(kg.s)",
+      displayUnit = "1/(ug.h)"
+      );
+
+    package Constants
+      extends Modelica.Icons.SourcesPackage;
+
+
+    block MolarFlowRateConst "Constant signal of type MolarFlowRate"
+     parameter BodylightExtension.Types.MolarReactionRate k
+          "Constant MolarFlowRate output value";
+          BodylightExtension.Types.RealIO.MolarReactionRateOutput y "MolarFlowRate constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="molarFlowRate",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end MolarFlowRateConst;
+
+    block MolarFluxPerAreaConst "Constant signal of type MolarFluxPerArea"
+     parameter BodylightExtension.Types.MolarFluxPerArea k
+          "Constant MolarFluxPerArea output value";
+          BodylightExtension.Types.RealIO.MolarFluxPerAreaOutput y "MolarFluxPerArea constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="molarFluxPerArea",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end MolarFluxPerAreaConst;
+
+    block SurfaceConcentrationConst "Constant signal of type SurfaceConcentration"
+     parameter BodylightExtension.Types.SurfaceConcentration k
+          "Constant SurfaceConcentration output value";
+          BodylightExtension.Types.RealIO.SurfaceConcentrationOutput y "SurfaceConcentration constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="surfaceConcentration",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end SurfaceConcentrationConst;
+
+    block DiffusionCoefficientConst "Constant signal of type DiffusionCoefficient"
+     parameter BodylightExtension.Types.DiffusionCoefficient k
+          "Constant DiffusionCoefficient output value";
+          BodylightExtension.Types.RealIO.DiffusionCoefficientOutput y "DiffusionCoefficient constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="diffusionCoefficient",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end DiffusionCoefficientConst;
+
+    block ReactionRateFirstOrderConst "Constant signal of type ReactionRateFirstOrder"
+     parameter BodylightExtension.Types.ReactionRateFirstOrder k
+          "Constant ReactionRateFirstOrder output value";
+          BodylightExtension.Types.RealIO.ReactionRateFirstOrderOutput y "ReactionRateFirstOrder constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="reactionRateFirstOrder",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end ReactionRateFirstOrderConst;
+
+    block ReactionRateSecondOrderConst "Constant signal of type ReactionRateSecondOrder"
+     parameter BodylightExtension.Types.ReactionRateSecondOrder k
+          "Constant ReactionRateSecondOrder output value";
+          BodylightExtension.Types.RealIO.ReactionRateSecondOrderOutput y "ReactionRateSecondOrder constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="reactionRateSecondOrder",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end ReactionRateSecondOrderConst;
+
+    block ReactionRateThirdOrderConst "Constant signal of type ReactionRateThirdOrder"
+     parameter BodylightExtension.Types.ReactionRateThirdOrder k
+          "Constant ReactionRateThirdOrder output value";
+          BodylightExtension.Types.RealIO.ReactionRateThirdOrderOutput y "ReactionRateThirdOrder constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="reactionRateThirdOrder",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end ReactionRateThirdOrderConst;
+
+    block ReverseMassConst "Constant signal of type ReverseMass"
+     parameter BodylightExtension.Types.ReverseMass k
+          "Constant ReverseMass output value";
+          BodylightExtension.Types.RealIO.MolarReactionRateOutput y "MolarFlowRate constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="molarFlowRate",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end ReverseMassConst;
+
+    block MassSpecificRateConst
+      "Constant signal of type MassSpecificRate"
+     parameter BodylightExtension.Types.MassSpecificRate k
+          "Constant MassSpecificRate output value";
+          BodylightExtension.Types.RealIO.MolarReactionRateOutput y "MolarFlowRate constant"
+          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
+              iconTransformation(extent={{40,-10},{60,10}})));
+    equation
+          y=k;
+      annotation (defaultComponentName="molarFlowRate",
+                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
+            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
+                graphics={
+            Rectangle(extent={{-40,40},{40,-40}},
+              lineColor={0,0,0},
+                  radius=10,
+              fillColor={236,236,236},
+                              fillPattern=FillPattern.Solid),
+            Text( extent={{-100,-44},{100,-64}},
+              lineColor={0,0,0},
+                      fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                  textString="%name"),
+            Text(         extent={{-40,10},{40,-10}},
+              lineColor={0,0,0},
+                  fillColor={236,236,236},
+              fillPattern=FillPattern.Solid,
+                      textString="Const")}));
+    end MassSpecificRateConst;
+    end Constants;
+
     package RealIO
       connector MolarReactionRateInput = input MolarReactionRate
       "input MolarReactionRate as connector"
@@ -400,215 +678,111 @@ package BodylightExtension
     Connector with one output signal of type Real.
     </p>
     </html>"));
+      connector ReverseMassInput       = input ReverseMass
+        "input ReverseMass as connector"
+      annotation (defaultComponentName="molarReactionRate",
+        Icon(graphics={Polygon(
+                points={{-100,100},{100,0},{-100,-100},{-100,100}},
+                lineColor={0,0,127},
+                fillColor={0,0,127},
+                fillPattern=FillPattern.Solid)},
+             coordinateSystem(extent={{-100,-100},{100,100}}, preserveAspectRatio=true, initialScale=0.2)),
+        Diagram(coordinateSystem(
+              preserveAspectRatio=true, initialScale=0.2,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{0,50},{100,0},{0,-50},{0,50}},
+                lineColor={0,0,127},
+                fillColor={0,0,127},
+                fillPattern=FillPattern.Solid), Text(
+                extent={{-10,85},{-10,60}},
+                lineColor={0,0,127},
+                textString="%name")}),
+          Documentation(info="<html>
+    <p>
+    Connector with one input signal of type MolarFlowRate.
+    </p>
+    </html>"));
+      connector ReverseMassOutput      = output ReverseMass
+        "output ReverseMass as connector"
+      annotation (defaultComponentName="molarReactionRate",
+        Icon(coordinateSystem(
+              preserveAspectRatio=true,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{-100,100},{100,0},{-100,-100},{-100,100}},
+                lineColor={0,0,127},
+                fillColor={255,255,255},
+                fillPattern=FillPattern.Solid)}),
+        Diagram(coordinateSystem(
+              preserveAspectRatio=true,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{-100,50},{0,0},{-100,-50},{-100,50}},
+                lineColor={0,0,127},
+                fillColor={255,255,255},
+                fillPattern=FillPattern.Solid), Text(
+                extent={{30,110},{30,60}},
+                lineColor={0,0,127},
+                textString="%name")}),
+          Documentation(info="<html>
+  <p>
+  Connector with one output signal of type Real.
+  </p>
+  </html>"));
+      connector MassSpecificRateInput  = input MassSpecificRate
+        "input MassSpecificRate as connector"
+      annotation (defaultComponentName="molarReactionRate",
+        Icon(graphics={Polygon(
+                points={{-100,100},{100,0},{-100,-100},{-100,100}},
+                lineColor={0,0,127},
+                fillColor={0,0,127},
+                fillPattern=FillPattern.Solid)},
+             coordinateSystem(extent={{-100,-100},{100,100}}, preserveAspectRatio=true, initialScale=0.2)),
+        Diagram(coordinateSystem(
+              preserveAspectRatio=true, initialScale=0.2,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{0,50},{100,0},{0,-50},{0,50}},
+                lineColor={0,0,127},
+                fillColor={0,0,127},
+                fillPattern=FillPattern.Solid), Text(
+                extent={{-10,85},{-10,60}},
+                lineColor={0,0,127},
+                textString="%name")}),
+          Documentation(info="<html>
+    <p>
+    Connector with one input signal of type MolarFlowRate.
+    </p>
+    </html>"));
+      connector MassSpecificRateOutput = output MassSpecificRate
+        "output MassSpecificRate as connector"
+      annotation (defaultComponentName="molarReactionRate",
+        Icon(coordinateSystem(
+              preserveAspectRatio=true,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{-100,100},{100,0},{-100,-100},{-100,100}},
+                lineColor={0,0,127},
+                fillColor={255,255,255},
+                fillPattern=FillPattern.Solid)}),
+        Diagram(coordinateSystem(
+              preserveAspectRatio=true,
+              extent={{-100,-100},{100,100}},
+              grid={1,1}), graphics={Polygon(
+                points={{-100,50},{0,0},{-100,-50},{-100,50}},
+                lineColor={0,0,127},
+                fillColor={255,255,255},
+                fillPattern=FillPattern.Solid), Text(
+                extent={{30,110},{30,60}},
+                lineColor={0,0,127},
+                textString="%name")}),
+          Documentation(info="<html>
+  <p>
+  Connector with one output signal of type Real.
+  </p>
+  </html>"));
     end RealIO;
-
-    package Constants
-      extends Modelica.Icons.SourcesPackage;
-
-
-    block MolarFlowRateConst "Constant signal of type MolarFlowRate"
-     parameter BodylightExtension.Types.MolarReactionRate k
-          "Constant MolarFlowRate output value";
-          BodylightExtension.Types.RealIO.MolarReactionRateOutput y "MolarFlowRate constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="molarFlowRate",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end MolarFlowRateConst;
-
-    block MolarFluxPerAreaConst "Constant signal of type MolarFluxPerArea"
-     parameter BodylightExtension.Types.MolarFluxPerArea k
-          "Constant MolarFluxPerArea output value";
-          BodylightExtension.Types.RealIO.MolarFluxPerAreaOutput y "MolarFluxPerArea constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="molarFluxPerArea",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end MolarFluxPerAreaConst;
-
-    block SurfaceConcentrationConst "Constant signal of type SurfaceConcentration"
-     parameter BodylightExtension.Types.SurfaceConcentration k
-          "Constant SurfaceConcentration output value";
-          BodylightExtension.Types.RealIO.SurfaceConcentrationOutput y "SurfaceConcentration constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="surfaceConcentration",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end SurfaceConcentrationConst;
-
-    block DiffusionCoefficientConst "Constant signal of type DiffusionCoefficient"
-     parameter BodylightExtension.Types.DiffusionCoefficient k
-          "Constant DiffusionCoefficient output value";
-          BodylightExtension.Types.RealIO.DiffusionCoefficientOutput y "DiffusionCoefficient constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="diffusionCoefficient",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end DiffusionCoefficientConst;
-
-    block ReactionRateFirstOrderConst "Constant signal of type ReactionRateFirstOrder"
-     parameter BodylightExtension.Types.ReactionRateFirstOrder k
-          "Constant ReactionRateFirstOrder output value";
-          BodylightExtension.Types.RealIO.ReactionRateFirstOrderOutput y "ReactionRateFirstOrder constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="reactionRateFirstOrder",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end ReactionRateFirstOrderConst;
-
-    block ReactionRateSecondOrderConst "Constant signal of type ReactionRateSecondOrder"
-     parameter BodylightExtension.Types.ReactionRateSecondOrder k
-          "Constant ReactionRateSecondOrder output value";
-          BodylightExtension.Types.RealIO.ReactionRateSecondOrderOutput y "ReactionRateSecondOrder constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="reactionRateSecondOrder",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end ReactionRateSecondOrderConst;
-
-    block ReactionRateThirdOrderConst "Constant signal of type ReactionRateThirdOrder"
-     parameter BodylightExtension.Types.ReactionRateThirdOrder k
-          "Constant ReactionRateThirdOrder output value";
-          BodylightExtension.Types.RealIO.ReactionRateThirdOrderOutput y "ReactionRateThirdOrder constant"
-          annotation (Placement(transformation(extent={{40,-10},{60,10}}),
-              iconTransformation(extent={{40,-10},{60,10}})));
-    equation
-          y=k;
-      annotation (defaultComponentName="reactionRateThirdOrder",
-                 Diagram(coordinateSystem(extent={{-40,-40},{40,40}})), Icon(
-            coordinateSystem(extent={{-40,-40},{40,40}}, preserveAspectRatio=false),
-                graphics={
-            Rectangle(extent={{-40,40},{40,-40}},
-              lineColor={0,0,0},
-                  radius=10,
-              fillColor={236,236,236},
-                              fillPattern=FillPattern.Solid),
-            Text( extent={{-100,-44},{100,-64}},
-              lineColor={0,0,0},
-                      fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                  textString="%name"),
-            Text(         extent={{-40,10},{40,-10}},
-              lineColor={0,0,0},
-                  fillColor={236,236,236},
-              fillPattern=FillPattern.Solid,
-                      textString="Const")}));
-    end ReactionRateThirdOrderConst;
-    end Constants;
 
   end Types;
   annotation (uses(Bodylight(version="1.0")));

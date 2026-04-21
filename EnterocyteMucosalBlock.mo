@@ -1471,7 +1471,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
           iconTransformation(extent={{96,-2},{116,18}})));
 
       Bodylight.Types.Mass Fe(
-        start = 1.51304 * 1e-6,
+        start = 1.51304 * 1e-9,
         displayUnit = "ug") "Fe ammount in serum (s1)";
       Bodylight.Types.MassFlowRate Fe_input(
         displayUnit = "ug.h-1") "Fe ammount in serum: input";
@@ -1479,7 +1479,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         displayUnit = "ug.h-1") "Fe ammount in serum: output";
 
       parameter Bodylight.Types.Mass th(
-        displayUnit = "ug") = 2.6870 * 1e-6 "Threshold serum iron value (k26), 2.08/3.00";
+        displayUnit = "ug") = 2.6870 * 1e-9 "Threshold serum iron value (k26), 2.08/3.00";
       parameter Bodylight.Types.Frequency v_liv_1(
         displayUnit = "h-1") = 3.9607 / (60 * 60) "Low liver iron uptake (k4), 2.78/9.81";
       parameter Bodylight.Types.Frequency v_liv_2(
@@ -1609,12 +1609,13 @@ organs"),   Text(
       Bodylight.Types.RealIO.MassFlowRateOutput RBC_out "Fe output to RBC"
         annotation (Placement(transformation(extent={{96,76},{116,96}}),
             iconTransformation(extent={{96,10},{116,30}})));
-      Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out "Fe output to spleen"
+      Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out
+        "Fe output to spleen"
         annotation (Placement(transformation(extent={{96,76},{116,96}}),
             iconTransformation(extent={{96,-30},{116,-10}})));
 
       Bodylight.Types.Mass Fe(
-        start = 63.1596 * 1e-6,
+        start = 63.1596 * 1e-9,
         displayUnit = "ug") "Fe ammount in bones (s3)";
       Bodylight.Types.MassFlowRate Fe_input(
         displayUnit = "ug.h-1") "Fe ammount in bones: input";
@@ -1679,7 +1680,8 @@ organs"),   Text(
     end Test_BoneMarrow;
 
     model RBC
-      Bodylight.Types.RealIO.MassFlowRateInput BoneMarrow_in "Fe input from bone marrow" annotation (Placement(transformation(extent={{-120,
+      Bodylight.Types.RealIO.MassFlowRateInput BoneMarrow_in
+        "Fe input from bone marrow"                                                      annotation (Placement(transformation(extent={{-120,
                 72},{-92,100}}), iconTransformation(extent={{-120,58},{-92,86}})));
       Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-120,-52},{-92,-24}})));
@@ -1690,7 +1692,7 @@ organs"),   Text(
             iconTransformation(extent={{94,-10},{114,10}})));
 
       Bodylight.Types.Mass Fe(
-        start = 63.1596 * 1e-6,
+        start = 63.1596 * 1e-9,
         displayUnit = "ug") "Fe ammount in bones (s3)";
       Bodylight.Types.MassFlowRate Fe_input(
         displayUnit = "ug.h-1") "Fe ammount in bones: input";
@@ -1763,6 +1765,486 @@ organs"),   Text(
       connect(Fe_bm.y, rBC.BoneMarrow_in) annotation (Line(points={{-82.25,32},
               {-32.025,32},{-32.025,31.6},{-35.8,31.6}}, color={0,0,127}));
     end Test_RBC;
+
+    model Spleen
+      Bodylight.Types.RealIO.MassFlowRateInput BoneMarrow_in
+        "Fe input from bone marrow"                                                      annotation (Placement(transformation(extent={{-120,
+                72},{-92,100}}), iconTransformation(extent={{-120,72},{-92,100}})));
+      Bodylight.Types.RealIO.MassFlowRateInput RBC_in "Fe input from RBC" annotation (Placement(transformation(extent={{-120,72},{-92,100}}),
+            iconTransformation(extent={{-120,42},{-92,70}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Serum_out "Fe output to serum" annotation (Placement(transformation(extent={{98,78},{118,98}}),
+          iconTransformation(extent={{98,78},{118,98}})));
+
+      Bodylight.Types.RealIO.MassInput hep "Hepcidin" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-70},{-92,-42}})));
+      Bodylight.Types.RealIO.MassInput il6 "IL6" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-100},{-92,-72}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 17.7295 * 1e-9,
+        displayUnit = "ug") "Fe amount in spleen (s5)";
+      Bodylight.Types.Mass FPN(
+        start = 1.00049 * 1e-9,
+        displayUnit = "ug") "FPN amount in spleen (s14)";
+      Bodylight.Types.Mass FPN_mRNA(
+        start = 0.922424 * 1e-9,
+        displayUnit = "ug") "FPN mRNA amount in spleen (s9)";
+
+      parameter Bodylight.Types.Mass Fe_max(
+        displayUnit = "ug") = 88.216 * 1e-9 "Threshold value spleen iron export (k44), 57.0/95.0";
+      parameter BodylightExtension.Types.MassSpecificRate u = 0.24102 * 1e9 / (60 * 60) "Spleen export rate (k3), 0.21/0.36";
+
+      Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
+      parameter Bodylight.Types.Frequency k_synth(
+        displayUnit = "h-1") = 0.022722 / (60 * 60) "Fpnspl synthesis rate (k30), 0.015/0.027";
+      parameter Bodylight.Types.Frequency k_deg(
+        displayUnit="h-1") = 0.055363 * 0.054621 / (60 * 60) "Fpnspl degradation rate (k12*k18, k18 = 0.054621), 0.0007/0.0038";
+      parameter BodylightExtension.Types.ReverseMass k_Fe = 0.014027 * 1e9 "Constant Fpn_spl production (k27), 0.005/0.028";
+      parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.4694 * 1e9 "Constant Fpnspl degradation (k13*k19, k19 = 4.4694), 9.2/73.7";
+
+      Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
+      parameter Bodylight.Types.MassFlowRate K_mRNA = 1 / (60 * 60);
+      parameter Real K1_mRNA = 30.66 * 1.0867 "Constant Fpn_spl_mRNA production (k36*K_liv_1, k36 = 1.086700), 33.1/34.5";
+      parameter Bodylight.Types.Mass K2_mRNA(
+        displayUnit = "ug") = 0.0012836 * 1e-9 "Constant FpnmRNA production (k41), 3.0e-4/2.0e-3";
+      parameter Bodylight.Types.Frequency k_mRNA_deg(
+        displayUnit = "h-1") = 1.0841 / (60 * 60) "FpnmRNA degradation rate (k25), 1.02/1.20";
+
+    initial equation
+
+      der(Fe) = 0;
+      der(FPN) = 0;
+      der(FPN_mRNA) = 0;
+
+    equation
+
+      Serum_out = u * min(Fe, Fe_max) * FPN;
+
+      der(Fe) = RBC_in + BoneMarrow_in - Serum_out;
+
+      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
+
+      der(FPN) = FPN_synthesis - FPN_degradation;
+
+      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
+
+      der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-88,94},{-18,76}},
+              textColor={28,108,200},
+              textString="Bone marrow"),
+            Text(
+              extent={{-106,62},{-40,48}},
+              textColor={28,108,200},
+              textString="RBC"),
+            Text(
+              extent={{50,94},{98,80}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{-58,38},{62,-28}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-96,-50},{-30,-64}},
+              textColor={28,108,200},
+              textString="Hepcidin"),
+            Text(
+              extent={{-110,-80},{-44,-94}},
+              textColor={28,108,200},
+              textString="IL6")}),              Diagram(coordinateSystem(
+              preserveAspectRatio=false)));
+    end Spleen;
+
+    model Test_Spleen
+                      extends Modelica.Icons.Example
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+      Spleen spleen
+        annotation (Placement(transformation(extent={{-20,-20},{20,20}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_bm(k(displayUnit="ug.h-1")
+           = 1.6985906388889e-13)
+        annotation (Placement(transformation(extent={{-98,10},{-84,22}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_RBC(k(displayUnit="ug.h-1")
+           = 1.0177122222222e-12)
+        annotation (Placement(transformation(extent={{-98,-6},{-84,6}})));
+      Bodylight.Types.Constants.MassConst hep(k(displayUnit="ug") =
+          6.6493815e-10)
+        annotation (Placement(transformation(extent={{-96,-20},{-88,-12}})));
+      Bodylight.Types.Constants.MassConst il6(k(displayUnit="ug") = 0)
+        annotation (Placement(transformation(extent={{-96,-32},{-88,-24}})));
+    equation
+      connect(Fe_bm.y, spleen.BoneMarrow_in) annotation (Line(points={{-82.25,
+              16},{-24,16},{-24,17.2},{-21.2,17.2}}, color={0,0,127}));
+      connect(Fe_RBC.y, spleen.RBC_in) annotation (Line(points={{-82.25,0},{-30,
+              0},{-30,11.2},{-21.2,11.2}}, color={0,0,127}));
+      connect(hep.y, spleen.hep) annotation (Line(points={{-87,-16},{-32,-16},{
+              -32,-11.2},{-21.2,-11.2}}, color={0,0,127}));
+      connect(il6.y, spleen.il6) annotation (Line(points={{-87,-28},{-30,-28},{
+              -30,-17.2},{-21.2,-17.2}}, color={0,0,127}));
+    end Test_Spleen;
+
+    model Liver
+      Bodylight.Types.RealIO.MassFlowRateInput Serum_in "Fe input from serum"
+        annotation (Placement(transformation(extent={{-120,72},{-92,100}}),
+            iconTransformation(extent={{-120,72},{-92,100}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Serum_out "Fe output to serum" annotation (Placement(transformation(extent={{98,78},{118,98}}),
+          iconTransformation(extent={{98,78},{118,98}})));
+
+      Bodylight.Types.RealIO.MassInput hep "Hepcidin" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-70},{-92,-42}})));
+      Bodylight.Types.RealIO.MassInput il6 "IL6" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-100},{-92,-72}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 76.9562 * 1e-9,
+        displayUnit = "ug") "Fe amount in liver (s2)";
+      Bodylight.Types.Mass FPN(
+        start = 1.00036 * 1e-9,
+        displayUnit = "ug") "FPN amount in liver (s12)";
+      Bodylight.Types.Mass FPN_mRNA(
+        start = 0.922424 * 1e-9,
+        displayUnit = "ug") "FPN mRNA amount in liver (s7)";
+
+      parameter Bodylight.Types.Mass Fe_max(
+        displayUnit = "ug") = 119.55 * 1e-9 "Threshold value liver iron export (k43), 100.0/159.0";
+      parameter BodylightExtension.Types.MassSpecificRate u = 0.077844 * 1e9 / (60 * 60) "Liver iron export rate (k1), 0.05/0.19";
+
+      Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
+      parameter Bodylight.Types.Frequency k_synth(
+        displayUnit = "h-1") = 0.1297 / (60 * 60) "Fpnliv synthesis rate (k28), 0.07/0.14";
+      parameter Bodylight.Types.Frequency k_deg(
+        displayUnit="h-1") = 0.055363 / (60 * 60) "Fpnliv degradation rate (k12), 0.01/0.06";
+      parameter BodylightExtension.Types.ReverseMass k_Fe = 0.0033177 * 1e6 "Constant Fpn_liv production (k17), 0.002/0.006";
+      parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 1e9 "Constant Fpnliv degradation (k13), 2.11/12.93";
+
+      Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
+      parameter Bodylight.Types.MassFlowRate K_mRNA = 1 / (60 * 60);
+      parameter Real K1_mRNA = 30.66 "Constant Fpn_liv_mRNA production (k24), 28.0/32.5";
+      parameter Bodylight.Types.Mass K2_mRNA(
+        displayUnit = "ug") = 0.0012836 * 1e-9 "Constant FpnmRNA production (k41), 3.0e-4/2.0e-3";
+      parameter Bodylight.Types.Frequency k_mRNA_deg(
+        displayUnit = "h-1") = 1.0841 / (60 * 60) "FpnmRNA degradation rate (k25), 1.02/1.20";
+
+    initial equation
+
+      der(Fe) = 0;
+      der(FPN) = 0;
+      der(FPN_mRNA) = 0;
+
+    equation
+
+      Serum_out = u * min(Fe, Fe_max) * FPN;
+
+      der(Fe) = Serum_in - Serum_out;
+
+      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
+
+      der(FPN) = FPN_synthesis - FPN_degradation;
+
+      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
+
+      der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-94,92},{-40,78}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{50,94},{98,80}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{-58,38},{62,-28}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-96,-50},{-30,-64}},
+              textColor={28,108,200},
+              textString="Hepcidin"),
+            Text(
+              extent={{-110,-80},{-44,-94}},
+              textColor={28,108,200},
+              textString="IL6")}),              Diagram(coordinateSystem(
+              preserveAspectRatio=false)));
+    end Liver;
+
+    model Test_Liver
+                     extends Modelica.Icons.Example
+      annotation (
+
+                  Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+      Liver liver
+        annotation (Placement(transformation(extent={{-20,-20},{20,20}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_serum(k(displayUnit=
+              "ug.h-1") = 1.6646425e-12)
+        annotation (Placement(transformation(extent={{-90,10},{-76,22}})));
+      Bodylight.Types.Constants.MassConst hep(k(displayUnit="ug") =
+          6.6493815e-10)
+        annotation (Placement(transformation(extent={{-92,-14},{-84,-6}})));
+      Bodylight.Types.Constants.MassConst il6(k(displayUnit="ug") =
+          6.6320815e-41)
+        annotation (Placement(transformation(extent={{-92,-28},{-84,-20}})));
+    equation
+      connect(Fe_serum.y, liver.Serum_in) annotation (Line(points={{-74.25,16},
+              {-30,16},{-30,17.2},{-21.2,17.2}}, color={0,0,127}));
+      connect(hep.y, liver.hep) annotation (Line(points={{-83,-10},{-30,-10},{
+              -30,-11.2},{-21.2,-11.2}}, color={0,0,127}));
+      connect(il6.y, liver.il6) annotation (Line(points={{-83,-24},{-32,-24},{
+              -32,-17.2},{-21.2,-17.2}}, color={0,0,127}));
+    end Test_Liver;
+
+    model Duodenum
+      Bodylight.Types.RealIO.MassFlowRateInput Serum_in "Fe input from serum"
+        annotation (Placement(transformation(extent={{-120,72},{-92,100}}),
+            iconTransformation(extent={{-120,72},{-92,100}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Serum_out "Fe output to serum" annotation (Placement(transformation(extent={{98,78},{118,98}}),
+          iconTransformation(extent={{98,78},{118,98}})));
+
+      Bodylight.Types.RealIO.MassInput hep "Hepcidin" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-70},{-92,-42}})));
+      Bodylight.Types.RealIO.MassInput il6 "IL6" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-100},{-92,-72}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 2.97118 * 1e-9,
+        displayUnit = "ug") "Fe ammount in duodenum (s4)";
+      Bodylight.Types.Mass FPN(
+        start = 1.00017 * 1e-9,
+        displayUnit = "ug") "Fpn ammount in duodenum (s13)";
+      Bodylight.Types.Mass FPN_mRNA(
+        start = 0.922424 * 1e-9,
+        displayUnit = "ug") "Fpn mRNA ammount in duodenum (s8)";
+
+      parameter Bodylight.Types.Mass Fe_max(
+        displayUnit = "ug") = 119.55 * 1e-9 "Threshold value liver iron export (k43), 100.0/159.0";
+      parameter BodylightExtension.Types.MassSpecificRate u = 0.077844 * 1e9 / (60 * 60) "Liver iron export rate (k1), 0.05/0.19";
+
+      Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
+      parameter Bodylight.Types.Frequency k_synth(
+        displayUnit = "h-1") = 0.1297 / (60 * 60) "Fpnliv synthesis rate (k28), 0.07/0.14";
+      parameter Bodylight.Types.Frequency k_deg(
+        displayUnit="h-1") = 0.055363 / (60 * 60) "Fpnliv degradation rate (k12), 0.01/0.06";
+      parameter BodylightExtension.Types.ReverseMass k_Fe = 0.0033177 * 1e9 "Constant Fpn_liv production (k17), 0.002/0.006";
+      parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 1e9 "Constant Fpnliv degradation (k13), 2.11/12.93";
+
+      Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
+      parameter Bodylight.Types.MassFlowRate K_mRNA = 1 / (60 * 60);
+      parameter Real K1_mRNA = 30.66;
+      parameter Bodylight.Types.Mass K2_mRNA(
+        displayUnit = "ug") = 0.0012836 * 1e-9 "Constant FpnmRNA production (k41), 3.0e-4/2.0e-3";
+      parameter Bodylight.Types.Frequency k_mRNA_deg(
+        displayUnit = "h-1") = 1.0841 / (60 * 60) "FpnmRNA degradation rate (k25), 1.02/1.20";
+
+    initial equation
+
+      der(Fe) = 0;
+      der(FPN) = 0;
+      der(FPN_mRNA) = 0;
+
+    equation
+
+      Serum_out = u * min(Fe, Fe_max) * FPN;
+
+      der(Fe) = Serum_in - Serum_out;
+
+      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
+
+      der(FPN) = FPN_synthesis - FPN_degradation;
+
+      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
+
+      der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-94,92},{-40,78}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{50,94},{98,80}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{-58,38},{62,-28}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-96,-50},{-30,-64}},
+              textColor={28,108,200},
+              textString="Hepcidin"),
+            Text(
+              extent={{-110,-80},{-44,-94}},
+              textColor={28,108,200},
+              textString="IL6")}),              Diagram(coordinateSystem(
+              preserveAspectRatio=false)));
+    end Duodenum;
+
+    model OtherOrgans
+      Bodylight.Types.RealIO.MassFlowRateInput Serum_in "Fe input from serum"
+        annotation (Placement(transformation(extent={{-120,72},{-92,100}}),
+            iconTransformation(extent={{-120,72},{-92,100}})));
+      Bodylight.Types.RealIO.MassFlowRateOutput Serum_out "Fe output to serum" annotation (Placement(transformation(extent={{98,78},{118,98}}),
+          iconTransformation(extent={{98,78},{118,98}})));
+
+      Bodylight.Types.RealIO.MassInput hep "Hepcidin" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-70},{-92,-42}})));
+      Bodylight.Types.RealIO.MassInput il6 "IL6" annotation (Placement(
+            transformation(extent={{-120,72},{-92,100}}), iconTransformation(extent
+              ={{-120,-100},{-92,-72}})));
+
+      Bodylight.Types.Mass Fe(
+        start = 466.811 * 1e-9,
+        displayUnit = "ug") "Fe amount in other organs (s10)";
+      Bodylight.Types.Mass FPN(
+        start = 1.00020 * 1e-9,
+        displayUnit = "ug") "Fpn amount in other organs (s15)";
+      Bodylight.Types.Mass FPN_mRNA(
+        start = 0.922424 * 1e-9,
+        displayUnit = "ug") "Fpn mRNA amount in other organs (s11)";
+
+      parameter Bodylight.Types.Mass Fe_max(
+        displayUnit = "ug") = 510.68 * 1e-9 "Limit value, iron lost rest (k49), 510/947";
+      parameter BodylightExtension.Types.MassSpecificRate u = 0.017143 * 1e9 / (60 * 60) "Other organs export rate (k33), 0.014/0.030";
+
+      Bodylight.Types.MassFlowRate Fe_loss;
+      parameter Real loss_factor = 1 "iron loss factor, 1 = physiologic, >1 enhanced loss";
+      parameter Bodylight.Types.Frequency u_lost = 0.0033401 / (60 * 60) "Iron lost rate rest (k9), 0.002/0.004";
+
+      Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
+      parameter Bodylight.Types.Frequency k_synth(
+        displayUnit = "h-1") = 0.0050598 / (60 * 60) "Fpnres synthesis rate (k40), 0.004/0.108";
+      parameter Bodylight.Types.Frequency k_deg(
+        displayUnit="h-1") = 0.055363 * 0.52232 / (60 * 60) "Fpnres degradation rate (k12*k38, k38 = 0.52232), 0.025/0.129";
+      parameter BodylightExtension.Types.ReverseMass k_Fe = 0.11376 * 1e9 "Constant Fpn_res production (k47), 0.004/0.152";
+      parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.5163 * 1e9 "Constant Fpnres degradation (k13*k39, k39 = 4.5163), 3.7/38.1";
+
+      Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
+      Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
+      parameter Bodylight.Types.MassFlowRate K_mRNA = 1 / (60 * 60);
+      parameter Real K1_mRNA = 30.66 * 0.36629 "Constant Fpn_res_mRNA production (k42*K_liv_1, k42 = 0.366290), 7.80/43.7";
+      parameter Bodylight.Types.Mass K2_mRNA(
+        displayUnit = "ug") = 0.0012836 * 1e-9 "Constant FpnmRNA production (k41), 3.0e-4/2.0e-3";
+      parameter Bodylight.Types.Frequency k_mRNA_deg(
+        displayUnit = "h-1") = 1.0841 / (60 * 60) "FpnmRNA degradation rate (k25), 1.02/1.20";
+
+    initial equation
+
+      der(Fe) = 0;
+      der(FPN) = 0;
+      der(FPN_mRNA) = 0;
+
+    equation
+
+      Serum_out = u * Fe * FPN;
+      Fe_loss = u_lost * min(Fe, Fe_max) * loss_factor;
+
+      der(Fe) = Serum_in - Serum_out - Fe_loss;
+
+      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
+
+      der(FPN) = FPN_synthesis - FPN_degradation;
+
+      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
+
+      der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-94,92},{-40,78}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{50,94},{98,80}},
+              textColor={28,108,200},
+              textString="Serum"),
+            Text(
+              extent={{-58,38},{62,-28}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-96,-50},{-30,-64}},
+              textColor={28,108,200},
+              textString="Hepcidin"),
+            Text(
+              extent={{-110,-80},{-44,-94}},
+              textColor={28,108,200},
+              textString="IL6")}),              Diagram(coordinateSystem(
+              preserveAspectRatio=false)));
+    end OtherOrgans;
+
+    model Test_OtherOrgans
+      extends Modelica.Icons.Example
+      annotation (
+
+                  Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+      OtherOrgans otherOrgans
+        annotation (Placement(transformation(extent={{-20,-20},{40,40}})));
+      Bodylight.Types.Constants.MassFlowRateConst Fe_serum(k(displayUnit=
+              "ug.h-1") = 2.6564847222222e-12)
+        annotation (Placement(transformation(extent={{-96,30},{-82,42}})));
+      Bodylight.Types.Constants.MassConst hep(k(displayUnit="ug") =
+          6.6493815e-10)
+        annotation (Placement(transformation(extent={{-92,-10},{-84,-2}})));
+      Bodylight.Types.Constants.MassConst il6(k(displayUnit="ug") =
+          6.6320815e-41)
+        annotation (Placement(transformation(extent={{-92,-22},{-84,-14}})));
+    equation
+      connect(Fe_serum.y, otherOrgans.Serum_in) annotation (Line(points={{
+              -80.25,36},{-51.025,36},{-51.025,35.8},{-21.8,35.8}}, color={0,0,
+              127}));
+      connect(hep.y, otherOrgans.hep) annotation (Line(points={{-83,-6},{-21.8,
+              -6},{-21.8,-6.8}}, color={0,0,127}));
+      connect(il6.y, otherOrgans.il6) annotation (Line(points={{-83,-18},{-24,
+              -18},{-24,-15.8},{-21.8,-15.8}}, color={0,0,127}));
+    end Test_OtherOrgans;
   end FeMetabolism;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
