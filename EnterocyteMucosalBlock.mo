@@ -2488,9 +2488,19 @@ organs"),   Text(
       Bodylight.Types.MassFlowRate hep_in "Production of hepcidin";
       Bodylight.Types.MassFlowRate hep_out "Degradation of hepcidin";
 
+      //auto/manual regulation
+
+      parameter Real hep_regulation = 1 "Hepcidin regulation: 1 - auto, 0 - manual";
+      parameter Bodylight.Types.Mass hep_manual(
+        displayUnit = "ug") = 0.664938 * 1e-9;
+      Bodylight.Types.Mass hep_auto(
+        start = 0.664938 * 1e-9,
+        displayUnit = "ug");
+      Real hep_regulation_switcher;
+
     initial equation
 
-      der(hep) = 0; // eq. 1
+      der(hep_auto) = 0; // eq. 1
 
     equation
 
@@ -2498,7 +2508,10 @@ organs"),   Text(
 
       hep_out = k_deg * hep;
 
-      der(hep) = hep_in - hep_out; // eq. 1
+      hep_regulation_switcher = smooth(1, noEvent(if hep_regulation > 0.5 then 1.0 else 0));
+
+      der(hep_auto) = hep_regulation_switcher * (hep_in - hep_out); // eq. 1
+      hep = hep_regulation_switcher * hep_auto + (1 - hep_regulation_switcher) * hep_manual;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
@@ -2542,14 +2555,17 @@ organs"),   Text(
     end Test_Hepcidin;
 
     model IL6 "IL-6"
-      Bodylight.Types.RealIO.MassInput LPS annotation (Placement(transformation(
-              extent={{-120,60},{-80,100}}), iconTransformation(extent={{-120,60},{-80,
-                100}})));
       Bodylight.Types.RealIO.MassOutput il6(
         start = 0*1e-9,
         displayUnit = "ug") "IL-6 amount (s22)"
                             annotation (Placement(transformation(
               extent={{94,74},{114,94}}), iconTransformation(extent={{94,74},{114,94}})));
+
+      Bodylight.Types.Mass LPS(
+        start = 0,
+        fixed = true,
+        displayUnit = "ug") "LPS (Lipopolysaccharide) ammount (s23)";
+      parameter Bodylight.Types.Frequency k_deg_LPS = 5.8560 / (60 * 60) "LPS degradation rate, 5.9/5.9";
 
       Bodylight.Types.Mass il6mRNA(
         start = 0 * 1e-9,
@@ -2572,6 +2588,8 @@ organs"),   Text(
       der(il6) = 0; // eq 5.
 
     equation
+
+      der(LPS) = -k_deg_LPS * LPS;
 
       il6mRNA_in = LPS / (LPS + K_mRNA);
       il6mRNA_out = k_deg_mRNA * il6mRNA;
@@ -2596,55 +2614,13 @@ organs"),   Text(
             Text(
               extent={{28,94},{104,70}},
               textColor={28,108,200},
-              textString="IL-6"),
-            Text(
-              extent={{-90,90},{-14,66}},
-              textColor={28,108,200},
-              textString="LPS")}),   Diagram(coordinateSystem(preserveAspectRatio=false)));
+              textString="IL-6")}),  Diagram(coordinateSystem(preserveAspectRatio=false)));
     end IL6;
 
     model Test_il6
       extends Modelica.Icons.Example;
       IL6 iL6 annotation (Placement(transformation(extent={{-40,-40},{40,40}})));
-      Bodylight.Types.Constants.MassConst LPS(k(displayUnit="ug") = 0)
-        annotation (Placement(transformation(extent={{-98,32},{-90,40}})));
-    equation
-      connect(LPS.y, iL6.LPS) annotation (Line(points={{-89,36},{-54,36},{-54,
-              32},{-40,32}}, color={0,0,127}));
     end Test_il6;
-
-    model LPS
-      Bodylight.Types.RealIO.MassOutput LPS(
-        start = 0 * 1e-9,
-        displayUnit = "ug") "LPS (Lipopolysaccharide) amount (s23)"
-                            annotation (Placement(transformation(
-          extent={{92,74},{112,94}}), iconTransformation(extent={{92,74},{112,94}})));
-
-      parameter Bodylight.Types.Frequency k_deg = 5.8560 / (60 * 60) "LPS degradation rate, 5.9/5.9";
-
-    initial equation
-
-      der(LPS) = 0;
-
-    equation
-
-        der(LPS) = -k_deg * LPS;
-
-      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
-            Rectangle(
-              extent={{-100,100},{100,-100}},
-              lineColor={28,108,200},
-              fillColor={255,255,0},
-              fillPattern=FillPattern.Solid),
-            Text(
-              extent={{-54,38},{66,-28}},
-              textColor={28,108,200},
-              textString="%name"),
-            Text(
-              extent={{24,94},{100,70}},
-              textColor={28,108,200},
-              textString="LPS")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
-    end LPS;
 
     model Bmp6
       Bodylight.Types.RealIO.MassOutput Bmp6(
@@ -2739,7 +2715,6 @@ organs"),   Text(
       IL6 iL6 annotation (Placement(transformation(extent={{-50,36},{-30,56}})));
       Bmp6 bmp6
         annotation (Placement(transformation(extent={{-50,60},{-30,80}})));
-      LPS lPS annotation (Placement(transformation(extent={{-86,36},{-66,56}})));
       Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
               "ug.h-1") = 0)
         annotation (Placement(transformation(extent={{-40,-60},{-26,-48}})));
@@ -2778,16 +2753,6 @@ organs"),   Text(
       connect(serum.OtherOrgans_out, otherOrgans.Serum_in) annotation (Line(
             points={{10.6,-3.2},{18,-3.2},{18,-20},{-16,-20},{-16,-23.4},{-10.6,
               -23.4}}, color={0,0,127}));
-      connect(hepcidin.hep, spleen.hep) annotation (Line(points={{2.6,54},{4,54},
-              {4,20.4},{21.4,20.4}}, color={0,0,127}));
-      connect(hepcidin.hep, liver.hep) annotation (Line(points={{2.6,54},{4,54},
-              {4,30},{-60,30},{-60,6.4},{-52.6,6.4}}, color={0,0,127}));
-      connect(liver.hep, duodenum.hep) annotation (Line(points={{-52.6,6.4},{
-              -60,6.4},{-60,-23.6},{-52.6,-23.6}}, color={0,0,127}));
-      connect(hepcidin.hep, duodenum.hep) annotation (Line(points={{2.6,54},{4,
-              54},{4,30},{-60,30},{-60,-23.6},{-52.6,-23.6}}, color={0,0,127}));
-      connect(duodenum.hep, otherOrgans.hep) annotation (Line(points={{-52.6,
-              -23.6},{-60,-23.6},{-60,-37.6},{-10.6,-37.6}}, color={0,0,127}));
       connect(iL6.il6, hepcidin.il6) annotation (Line(points={{-29.6,54.4},{-18,
               54.4},{-18,54}}, color={0,0,127}));
       connect(iL6.il6, spleen.il6) annotation (Line(points={{-29.6,54.4},{-24,
@@ -2802,8 +2767,6 @@ organs"),   Text(
               0,127}));
       connect(bmp6.Bmp6, hepcidin.Bmp6) annotation (Line(points={{-29.8,78.6},{
               -22,78.6},{-22,49.8},{-18,49.8}}, color={0,0,127}));
-      connect(lPS.LPS, iL6.LPS) annotation (Line(points={{-65.8,54.4},{-50,54.4},
-              {-50,54}}, color={0,0,127}));
       connect(liver.Fe, bmp6.Fe_liv) annotation (Line(points={{-31.8,5},{-28,5},
               {-28,-2},{-88,-2},{-88,78},{-50,78}}, color={0,0,127}));
       connect(serum.Fe, bmp6.Fe_ser) annotation (Line(points={{10.2,-11.6},{46,
@@ -2818,6 +2781,15 @@ organs"),   Text(
               54,-70},{54,-13.6},{59.4,-13.6}}, color={0,0,127}));
       connect(Fe_food.y, duodenum.Food_in) annotation (Line(points={{-82.25,-16},
               {-66.425,-16},{-66.425,-12.4},{-52.6,-12.4}}, color={0,0,127}));
+      connect(hepcidin.hep, spleen.hep) annotation (Line(points={{2.6,54},{12,
+              54},{12,30},{16,30},{16,20.4},{21.4,20.4}}, color={0,0,127}));
+      connect(hepcidin.hep, liver.hep) annotation (Line(points={{2.6,54},{12,54},
+              {12,30},{-62,30},{-62,6.4},{-52.6,6.4}}, color={0,0,127}));
+      connect(hepcidin.hep, duodenum.hep) annotation (Line(points={{2.6,54},{12,
+              54},{12,30},{-62,30},{-62,-23.6},{-52.6,-23.6}}, color={0,0,127}));
+      connect(hepcidin.hep, otherOrgans.hep) annotation (Line(points={{2.6,54},
+              {12,54},{12,30},{-62,30},{-62,-24},{-56,-24},{-56,-37.6},{-10.6,
+              -37.6}}, color={0,0,127}));
     end Test_Full;
   end FeMetabolism;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
