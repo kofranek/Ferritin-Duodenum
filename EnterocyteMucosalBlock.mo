@@ -1438,6 +1438,205 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
           __Dymola_NumberOfIntervals=5000,
           __Dymola_Algorithm="Dassl"));
     end Test_FerritinCageBlockShortModel_withOutputs;
+
+    model IntracellularIronDistribution
+      Bodylight.Types.RealIO.FractionInput StateScale annotation (Placement(
+            transformation(extent={{-126,52},{-86,92}}), iconTransformation(extent={
+                {-126,52},{-86,92}})));
+      Bodylight.Types.RealIO.FractionOutput LIP_Fraction annotation (Placement(
+            transformation(extent={{94,60},{114,80}}), iconTransformation(extent={{94,
+          60},{114,80}})));
+
+       discrete Real StateScale_prev(
+         start = 1);
+
+      //Normal Values
+      parameter Bodylight.Types.Concentration core_norm(
+        displayUnit = "mol/L") = 3.682217017e-6 * 1e3 "core (norm)";
+      parameter Bodylight.Types.Concentration LIP_norm(
+        displayUnit = "mol/L") = 1.223884748e-7 * 1e3 "LIP (norm)";
+
+      //Species
+
+      Bodylight.Types.Concentration FT_cage(
+        displayUnit = "mol/L",
+        start = 2.375189822e-9 * 1e3) "FT-cage";
+      Bodylight.Types.Concentration core(
+        displayUnit = "mol/L",
+        start = core_norm) "core";
+      Bodylight.Types.Concentration DFP(
+        displayUnit = "mol/L",
+        start = 1.344769304e-10 * 1e3) "diferric peroxo complex";
+      Bodylight.Types.Concentration LIP(
+        displayUnit = "mol/L",
+        start = LIP_norm) "labile iron pool";
+      Bodylight.Types.Concentration IRPs_active(
+        displayUnit = "mol/L",
+        start = 6.889335935e-11 * 1e3) "iron regulatory proteins (active)";
+      Bodylight.Types.Concentration IRPs_inactive(
+        displayUnit = "mol/L",
+        start = 7.264345126e-12 * 1e3) "iron regulatory proteins (inactive)";
+
+      Real atoms_per_cage_transient "Transient number of Fe atoms that are stored inside the core of a ferritin cage";
+
+      //Reactions
+
+      //FT expression ( -> FT-cage;  IRPs_active)
+      BodylightExtension.Types.MolarReactionRate FT_Expression;
+      parameter BodylightExtension.Types.MolarReactionRate k_cat_FT_Expression = 7.68e-14 * 1e3;
+      parameter Integer n_FT_Expression = 1;
+      parameter Bodylight.Types.Concentration K_FT_Expression(
+        displayUnit = "mol/L") = 1.4e-11 * 1e3;
+
+      //FT degradation (FT-cage -> )
+      BodylightExtension.Types.MolarReactionRate FT_Degradation;
+      parameter BodylightExtension.Types.ReactionRateFirstOrder k_FT_Degradation = 5.461499585e-6;
+
+      //FT degradation core release (core -> LIP; FT-cage core)
+      BodylightExtension.Types.MolarReactionRate FT_Degradation_Core_Release;
+
+      //FT Fe oxidation (2 * LIP -> DFP; FT-cage)
+      BodylightExtension.Types.MolarReactionRate FT_Fe_Oxidation;
+      parameter BodylightExtension.Types.ReactionRateFirstOrder k_cat_FT_Fe_Oxidation = 591;
+      parameter Bodylight.Types.Concentration K_m_FT_Fe_Oxidation(
+        displayUnit = "mol/L") = 0.35e-3 * 1e3;
+      parameter Real n_FT_Fe_Oxidation = 1.3;
+
+      //FT Fe Reduction (DFP -> 2 * LIP)
+      BodylightExtension.Types.MolarReactionRate FT_Fe_Reduction;
+      parameter BodylightExtension.Types.ReactionRateFirstOrder k_FT_Fe_Reduction = 0.2605;
+
+      //FT Nucleation (2 * DFP -> 4 * core; FT-cage core)
+      BodylightExtension.Types.MolarReactionRate FT_Nucleation;
+      parameter BodylightExtension.Types.ReactionRateThirdOrder k_cat_FT_Nucleation = 5e7 * 1e-6;
+      parameter Bodylight.Types.Concentration K_i_FT_Nucleation(
+        displayUnit = "mol/L") = 0.461598e-3 * 1e3;
+      parameter Integer n_FT_Nucleation = 4;
+
+      //FT core formation (Mineralization) (DFP -> 2 * core; core)
+      BodylightExtension.Types.MolarReactionRate FT_Core_Formation;
+      parameter BodylightExtension.Types.ReactionRateFirstOrder k_cat_FT_Core_Formation = 0.101564;
+      parameter Bodylight.Types.Concentration K_m_FT_Core_Formation(
+        displayUnit = "mol/L") = 5e-06 * 1e3;
+      parameter Bodylight.Types.Concentration K_i_FT_Core_Formation(
+        displayUnit = "mol/L") = 4.6458e-3 * 1e3;
+      parameter Integer n_FT_Core_Formation = 4;
+      parameter Integer m_FT_Core_Formation = 8;
+
+      //IRPs degradation (IRPs_active -> IRPs_inactive;  LIP)
+      BodylightExtension.Types.MolarReactionRate IRPs_Degradation;
+      parameter BodylightExtension.Types.ReactionRateSecondOrder
+        k_cat_IRPs_Degradation = 3.99474 * 1e-3;
+
+      //IRPs activation (IRPs_inactive -> IRPs_active)
+      BodylightExtension.Types.MolarReactionRate IRPs_Activation;
+      parameter BodylightExtension.Types.ReactionRateFirstOrder k_cat_IRPs_Activation = 4.63671e-6;
+
+      //Global Quantities
+
+      parameter Integer H = 24 "H subunits";
+      parameter Integer L = 24 - H "L subunits";
+
+      parameter Integer rN = 50;
+      parameter Integer rO = 2;
+
+    equation
+
+      atoms_per_cage_transient = core / FT_cage;
+
+      FT_Core_Formation = (k_cat_FT_Core_Formation * DFP * core) / (K_m_FT_Core_Formation + DFP)
+        * K_i_FT_Core_Formation ^ n_FT_Core_Formation / (K_i_FT_Core_Formation ^ n_FT_Core_Formation + core ^ n_FT_Core_Formation)
+        * (4300 ^ m_FT_Core_Formation - atoms_per_cage_transient ^ m_FT_Core_Formation) / 4300 ^ m_FT_Core_Formation;
+
+      FT_Degradation = k_FT_Degradation * FT_cage;
+
+      FT_Degradation_Core_Release = k_FT_Degradation * core;
+
+      FT_Expression = k_cat_FT_Expression * (1 - IRPs_active ^ n_FT_Expression / (K_FT_Expression ^ n_FT_Expression + IRPs_active ^ n_FT_Expression));
+
+      FT_Fe_Oxidation = (k_cat_FT_Fe_Oxidation * (H + rO) / (24 + rO) * FT_cage * LIP ^ n_FT_Fe_Oxidation)
+        / (K_m_FT_Fe_Oxidation ^ n_FT_Fe_Oxidation + LIP ^ n_FT_Fe_Oxidation);
+
+      FT_Fe_Reduction = k_FT_Fe_Reduction * DFP;
+
+      FT_Nucleation = k_cat_FT_Nucleation * DFP ^ 2 * FT_cage * (L + rN) / (24 + rN)
+        * K_i_FT_Nucleation ^ n_FT_Nucleation / (K_i_FT_Nucleation ^ n_FT_Nucleation + core ^ n_FT_Nucleation);
+
+      IRPs_Activation = k_cat_IRPs_Activation * IRPs_inactive;
+
+      IRPs_Degradation = k_cat_IRPs_Degradation * IRPs_active * LIP;
+
+      der(FT_cage) = -FT_Degradation
+        + FT_Expression;
+
+      der(core) = 2 * FT_Core_Formation
+        + 4 * FT_Nucleation
+        - FT_Degradation_Core_Release;
+
+      der(DFP) = -FT_Core_Formation
+        - FT_Fe_Reduction
+        + FT_Fe_Oxidation
+        - 2 * FT_Nucleation;
+
+      der(LIP) = 2 * FT_Fe_Reduction
+        - 2 * FT_Fe_Oxidation
+        + FT_Degradation_Core_Release;
+
+      der(IRPs_active) = IRPs_Activation
+        - IRPs_Degradation;
+
+      der(IRPs_inactive) = -IRPs_Activation
+        + IRPs_Degradation;
+
+      when initial() then
+
+        reinit(core, core_norm * StateScale);
+        reinit(LIP,  LIP_norm  * StateScale);
+
+        StateScale_prev = StateScale;
+
+      elsewhen abs(StateScale - pre(StateScale_prev)) > 1e-3 then
+
+        reinit(core, core_norm * StateScale);
+        reinit(LIP,  LIP_norm  * StateScale);
+
+        StateScale_prev = StateScale;
+
+      end when;
+
+      LIP_Fraction = LIP / (core + LIP);
+
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+            Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-58,30},{62,-36}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-82,82},{-8,62}},
+              textColor={28,108,200},
+              textString="State Scale"),
+            Text(
+              extent={{28,84},{86,58}},
+              textColor={28,108,200},
+              textString="LIP %%")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end IntracellularIronDistribution;
+
+    model Test_IntracellularIronDistribution
+      extends Modelica.Icons.Example;
+      IntracellularIronDistribution intracellularIronDistribution
+        annotation (Placement(transformation(extent={{-40,-40},{40,40}})));
+      Bodylight.Types.Constants.FractionConst fraction(k=1)
+        annotation (Placement(transformation(extent={{-94,68},{-86,76}})));
+    equation
+      connect(fraction.y, intracellularIronDistribution.StateScale) annotation
+        (Line(points={{-85,72},{-56,72},{-56,28.8},{-42.4,28.8}}, color={0,0,
+              127}));
+    end Test_IntracellularIronDistribution;
   end models;
 
   package FeMetabolism
