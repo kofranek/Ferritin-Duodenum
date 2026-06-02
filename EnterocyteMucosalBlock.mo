@@ -1715,6 +1715,24 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end TestTgBlock;
+
+    model TestTanh
+       extends Modelica.Icons.Example;
+      FeMetabolism.Tanh tanh(duration=1)
+        annotation (Placement(transformation(extent={{-36,-14},{-16,6}})));
+      Modelica.Blocks.Sources.Constant const(k=120)
+        annotation (Placement(transformation(extent={{-92,18},{-72,38}})));
+      Modelica.Blocks.Sources.Constant const1(k=400)
+        annotation (Placement(transformation(extent={{-90,-16},{-70,4}})));
+    equation
+      connect(const1.y, tanh.toValue) annotation (Line(points={{-69,-6},{-42,-6},
+              {-42,-6.4},{-37.2,-6.4}},
+                                    color={0,0,127}));
+      connect(const.y, tanh.fromValue) annotation (Line(points={{-71,28},{-44,
+              28},{-44,2.6},{-37.2,2.6}}, color={0,0,127}));
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+    end TestTanh;
   end models;
 
   package FeMetabolism
@@ -3066,6 +3084,220 @@ organs"),   Text(
               {12,54},{12,30},{-62,30},{-62,-24},{-56,-24},{-56,-37.6},{-10.6,
               -37.6}}, color={0,0,127}));
     end Test_Full;
+
+    model Tanh
+      "Tanh model is designed to gradually change the value from fromValue 
+  to toValue over the time (in seconds) 
+  specified by the duration parameter."
+     Modelica.Blocks.Interfaces.RealInput fromValue annotation (Placement(
+           transformation(extent={{-174,-132},{-134,-92}}),
+                                                       iconTransformation(extent={{
+               -124,54},{-100,78}})));
+     Modelica.Blocks.Interfaces.RealInput toValue annotation (Placement(
+           transformation(extent={{-176,-52},{-136,-12}}),
+                                                        iconTransformation(extent={{-124,
+                -36},{-100,-12}})));
+     parameter Modelica.Units.SI.Time duration = 5.0 "Transition duration in seconds";
+
+
+     models.TanhStepBlock tanhStepBlock
+       annotation (Placement(transformation(extent={{-20,-64},{4,-40}})));
+     Modelica.Blocks.Interfaces.RealOutput currentValue annotation (Placement(
+            transformation(extent={{94,-120},{120,-94}}), iconTransformation(extent
+              ={{100,12},{120,32}})));
+     Modelica.Blocks.Math.Product currentValueCalculation
+       annotation (Placement(transformation(extent={{24,-70},{44,-50}})));
+     Modelica.Blocks.Math.Division division
+       annotation (Placement(transformation(extent={{-52,-62},{-32,-42}})));
+     Modelica.Blocks.Math.Feedback feedback2
+       annotation (Placement(transformation(extent={{-12,-98},{8,-78}})));
+     Modelica.Blocks.Math.Add add
+       annotation (Placement(transformation(extent={{64,-116},{84,-96}})));
+
+      Modelica.Blocks.Sources.Constant constDuration(k=1.0/duration)
+        "Constant for velocity integration"
+        annotation (Placement(transformation(extent={{-126,-18},{-110,-2}})));
+      Modelica.Blocks.Continuous.Integrator rampGen(
+        k=1,                                        initType=Modelica.Blocks.Types.Init.InitialState, y_start=0.0) "Generates time from 0 to duration parameter"
+        annotation (Placement(transformation(extent={{-92,-16},{-78,-2}})));
+      Modelica.Blocks.Math.Product rampScale "Multiplies time by toValue"
+        annotation (Placement(transformation(extent={{-46,-20},{-32,-6}})));
+
+    equation
+     connect(division.y, tanhStepBlock.u)
+       annotation (Line(points={{-31,-52},{-22.4,-52}}, color={0,0,127}));
+     connect(tanhStepBlock.y, currentValueCalculation.u1)
+       annotation (Line(points={{6.4,-52},{6.4,-54},{22,-54}},
+                                                     color={0,0,127}));
+     connect(feedback2.u1, toValue) annotation (Line(points={{-10,-88},{-102,-88},{-102,
+              -58},{-116,-58},{-116,-32},{-156,-32}},
+                                                 color={0,0,127}));
+     connect(fromValue, feedback2.u2) annotation (Line(points={{-154,-112},{-2,-112},
+              {-2,-96}},                   color={0,0,127}));
+     connect(feedback2.y, currentValueCalculation.u2) annotation (Line(points={{7,-88},
+              {14,-88},{14,-66},{22,-66}},color={0,0,127}));
+     connect(add.u2, feedback2.u2)
+       annotation (Line(points={{62,-112},{-2,-112},{-2,-96}},
+                                                             color={0,0,127}));
+     connect(add.u1, currentValueCalculation.y) annotation (Line(points={{62,-100},{
+              52,-100},{52,-60},{45,-60}}, color={0,0,127}));
+      connect(add.y, currentValue) annotation (Line(points={{85,-106},{94,-106},{94,
+              -107},{107,-107}}, color={0,0,127}));
+     connect(division.u2, toValue) annotation (Line(points={{-54,-58},{-116,-58},{-116,
+              -32},{-156,-32}},                  color={0,0,127}));
+      connect(constDuration.y, rampGen.u) annotation (Line(points={{-109.2,-10},{-109.2,
+              -9},{-93.4,-9}}, color={0,0,127}));
+      connect(rampGen.y, rampScale.u1) annotation (Line(points={{-77.3,-9},{-77.3,-8},
+              {-54,-8},{-54,-8.8},{-47.4,-8.8}},  color={0,0,127}));
+      connect(rampScale.u2, toValue) annotation (Line(points={{-47.4,-17.2},{-74,-17.2},
+              {-74,-32},{-156,-32}},                   color={0,0,127}));
+      connect(rampScale.y, division.u1) annotation (Line(points={{-31.3,-13},{-30,-13},
+              {-30,-30},{-68,-30},{-68,-46},{-54,-46}}, color={0,0,127}));
+     annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+           Rectangle(
+             extent={{-100,100},{100,-100}},
+             lineColor={28,108,200},
+             fillColor={255,255,0},
+             fillPattern=FillPattern.Solid),
+           Text(
+             extent={{-94,74},{-12,60}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Left,
+             textString="fromValue"),
+           Text(
+             extent={{-96,-16},{-10,-30}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Left,
+             textString="toValue"),
+           Text(
+             extent={{14,28},{96,14}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Right,
+              textString="currentValue"),
+            Text(
+              extent={{-120,-102},{120,-122}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-90,-50},{76,-68}},
+              textColor={28,108,200},
+              textString=" ")}),           Diagram(coordinateSystem(
+             preserveAspectRatio=false)));
+    end Tanh;
+
+    model TanhAndIntegrater
+     Modelica.Blocks.Interfaces.RealInput fromValue annotation (Placement(
+           transformation(extent={{-64,-142},{-24,-102}}),
+                                                       iconTransformation(extent={{
+               -124,54},{-100,78}})));
+     Modelica.Blocks.Interfaces.RealOutput currentValue annotation (Placement(
+           transformation(extent={{96,34},{122,60}}), iconTransformation(extent={{100,
+               30},{120,50}})));
+     Modelica.Blocks.Interfaces.RealInput toValue annotation (Placement(
+           transformation(extent={{-160,-12},{-120,28}}),
+                                                        iconTransformation(extent={
+               {-124,18},{-100,42}})));
+     parameter Modelica.Units.SI.Time duration = 5.0 "Doba trvání přechodu v sekundách";
+
+     Modelica.Blocks.Math.Gain gain(k=1)
+       annotation (Placement(transformation(extent={{-40,44},{-20,64}})));
+     Modelica.Blocks.Math.Feedback feedback1
+       annotation (Placement(transformation(extent={{-32,16},{-16,32}})));
+    Modelica.Blocks.Continuous.Integrator int(initType=Modelica.Blocks.Types.Init.NoInit, y(start=120))
+       annotation (Placement(transformation(extent={{12,44},{32,64}})));
+
+     models.TanhStepBlock tanhStepBlock
+       annotation (Placement(transformation(extent={{-22,-62},{2,-38}})));
+     Modelica.Blocks.Interfaces.RealOutput currentValue1
+                                                        annotation (Placement(
+           transformation(extent={{94,-120},{120,-94}}),
+                                                      iconTransformation(extent={{100,-36},
+               {120,-16}})));
+     Modelica.Blocks.Math.Product currentValueCalculation
+       annotation (Placement(transformation(extent={{24,-66},{44,-46}})));
+     Modelica.Blocks.Math.Division division
+       annotation (Placement(transformation(extent={{-52,-60},{-32,-40}})));
+     Modelica.Blocks.Math.Feedback feedback2
+       annotation (Placement(transformation(extent={{-10,-100},{10,-80}})));
+     Modelica.Blocks.Math.Add add
+       annotation (Placement(transformation(extent={{60,-116},{80,-96}})));
+
+      Modelica.Blocks.Sources.Constant constOne(k=1.0/duration)
+                                                       "Konstanta pro integraci rychlosti"
+        annotation (Placement(transformation(extent={{-142,-22},{-126,-6}})));
+      Modelica.Blocks.Continuous.Integrator rampGen(
+        k=1,                                        initType=Modelica.Blocks.Types.Init.InitialState, y_start=0.0) "Generuje čas od 0 do t"
+        annotation (Placement(transformation(extent={{-92,-20},{-78,-6}})));
+      Modelica.Blocks.Math.Product rampScale "Vynásobí čas hodnotou toValue"
+        annotation (Placement(transformation(extent={{-70,-22},{-58,-10}})));
+    initial equation
+       int.y = fromValue;
+    equation
+     connect(feedback1.y, gain.u) annotation (Line(points={{-16.8,24},{-16.8,40},{-52,
+             40},{-52,54},{-42,54}},
+                        color={0,0,127}));
+     connect(gain.y, int.u)
+       annotation (Line(points={{-19,54},{10,54}}, color={0,0,127}));
+     connect(int.y, currentValue) annotation (Line(points={{33,54},{84,54},{84,
+             47},{109,47}},    color={0,0,127}));
+     connect(feedback1.u2, currentValue) annotation (Line(points={{-24,17.6},{-26,17.6},
+             {-26,6},{84,6},{84,47},{109,47}},   color={0,0,127}));
+     connect(division.y, tanhStepBlock.u)
+       annotation (Line(points={{-31,-50},{-24.4,-50}}, color={0,0,127}));
+     connect(tanhStepBlock.y, currentValueCalculation.u1)
+       annotation (Line(points={{4.4,-50},{22,-50}}, color={0,0,127}));
+     connect(feedback1.u1, toValue) annotation (Line(points={{-30.4,24},{-114,24},{
+             -114,8},{-140,8}}, color={0,0,127}));
+     connect(feedback2.u1, toValue) annotation (Line(points={{-8,-90},{-64,-90},{-64,
+             -88},{-116,-88},{-116,8},{-140,8}}, color={0,0,127}));
+     connect(fromValue, feedback2.u2) annotation (Line(points={{-44,-122},{-22,-122},
+             {-22,-124},{0,-124},{0,-98}}, color={0,0,127}));
+     connect(feedback2.y, currentValueCalculation.u2) annotation (Line(points={{9,-90},
+             {16,-90},{16,-62},{22,-62}}, color={0,0,127}));
+     connect(add.u2, feedback2.u2)
+       annotation (Line(points={{58,-112},{0,-112},{0,-98}}, color={0,0,127}));
+     connect(add.u1, currentValueCalculation.y) annotation (Line(points={{58,-100},
+             {52,-100},{52,-56},{45,-56}}, color={0,0,127}));
+     connect(add.y, currentValue1) annotation (Line(points={{81,-106},{94,-106},{94,
+             -107},{107,-107}}, color={0,0,127}));
+     connect(division.u2, toValue) annotation (Line(points={{-54,-56},{-66,-56},{-66,
+              -82},{-116,-82},{-116,8},{-140,8}},color={0,0,127}));
+      connect(constOne.y, rampGen.u) annotation (Line(points={{-125.2,-14},{-125.2,-13},
+              {-93.4,-13}}, color={0,0,127}));
+      connect(rampGen.y, rampScale.u1) annotation (Line(points={{-77.3,-13},{-74.25,
+              -13},{-74.25,-12.4},{-71.2,-12.4}}, color={0,0,127}));
+      connect(rampScale.u2, toValue) annotation (Line(points={{-71.2,-19.6},{-74,-19.6},
+              {-74,-46},{-116,-46},{-116,8},{-140,8}}, color={0,0,127}));
+      connect(rampScale.y, division.u1) annotation (Line(points={{-57.4,-16},{-52,-16},
+              {-52,-34},{-64,-34},{-64,-44},{-54,-44}}, color={0,0,127}));
+     annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+           Rectangle(
+             extent={{-100,100},{100,-100}},
+             lineColor={28,108,200},
+             fillColor={255,255,0},
+             fillPattern=FillPattern.Solid),
+           Text(
+             extent={{-94,74},{-12,60}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Left,
+             textString="fromValue"),
+           Text(
+             extent={{-98,38},{-12,24}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Left,
+             textString="toValue"),
+           Text(
+             extent={{18,48},{100,34}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Right,
+             textString="currentValue"),
+           Text(
+             extent={{18,-18},{100,-32}},
+             textColor={28,108,200},
+             horizontalAlignment=TextAlignment.Right,
+             textString="currentValue1")}),Diagram(coordinateSystem(
+             preserveAspectRatio=false)));
+    end TanhAndIntegrater;
   end FeMetabolism;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
