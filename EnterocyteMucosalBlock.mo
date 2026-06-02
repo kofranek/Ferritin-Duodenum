@@ -1,4 +1,4 @@
-within ;
+﻿within ;
 package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
   package models
@@ -98,7 +98,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
           StopTime=500,
           Tolerance=1e-07,
           __Dymola_Algorithm="Dassl"));
-
     end CellularFerritinIronStorageModel;
 
     model EnterocyteMucosalBlockModel "Enterocyte mucosal block"
@@ -409,13 +408,13 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         start = 2.375189822e-9 * 1e3) "FT-cage";
       Bodylight.Types.Concentration core(
         displayUnit = "mol/L",
-        start = 3.682217017e-6 * 1e3) "core";
+        start = 4*3.682217017e-6 * 1e3) "core";
       Bodylight.Types.Concentration DFP(
         displayUnit = "mol/L",
         start = 1.344769304e-10 * 1e3) "diferric peroxo complex";
       Bodylight.Types.Concentration LIP(
         displayUnit = "mol/L",
-        start = 1.223884748e-7 * 1e3) "labile iron pool";
+        start = 4*1.223884748e-7 * 1e3) "labile iron pool";
       Bodylight.Types.Concentration IRPs_active(
         displayUnit = "mol/L",
         start = 6.889335935e-11 * 1e3) "iron regulatory proteins (active)";
@@ -889,7 +888,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               extent={{-110,-106},{110,-124}},
               textColor={28,108,200},
               textString="%name")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
-
     end FerritinLysis;
 
     model FT_cage_regulation
@@ -980,7 +978,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               textColor={28,108,200},
               textString="FT_cage")}),          Diagram(coordinateSystem(
               preserveAspectRatio=false)));
-
     end FT_cage_regulation;
 
     model Test_FT_cageRegulation
@@ -1190,8 +1187,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       FerritinCageBlockShortModel ferritinCageBlockShortModel
         annotation (Placement(transformation(extent={{-44,24},{-2,64}})));
     equation
-      connect(Fe_total.y, ferritinCageBlockShortModel.Fe_total_set) annotation
-        (Line(points={{-77,42},{-54,42},{-54,44.4},{-45.68,44.4}}, color={0,0,
+      connect(Fe_total.y, ferritinCageBlockShortModel.Fe_total_set) annotation (
+         Line(points={{-77,42},{-54,42},{-54,44.4},{-45.68,44.4}}, color={0,0,
               127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)),
@@ -1630,13 +1627,94 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       extends Modelica.Icons.Example;
       IntracellularIronDistribution intracellularIronDistribution
         annotation (Placement(transformation(extent={{-40,-40},{40,40}})));
-      Bodylight.Types.Constants.FractionConst fraction(k=1)
+      Bodylight.Types.Constants.FractionConst fraction(k=4)
         annotation (Placement(transformation(extent={{-94,68},{-86,76}})));
     equation
-      connect(fraction.y, intracellularIronDistribution.StateScale) annotation
-        (Line(points={{-85,72},{-56,72},{-56,28.8},{-42.4,28.8}}, color={0,0,
+      connect(fraction.y, intracellularIronDistribution.StateScale) annotation (
+         Line(points={{-85,72},{-56,72},{-56,28.8},{-42.4,28.8}}, color={0,0,
               127}));
     end Test_IntracellularIronDistribution;
+
+    block TanhStepBlock "Blok pro hladký přechod mezi 0 a 1 pomocí tanh"
+     import Modelica.Blocks.Interfaces.RealInput;
+     import Modelica.Blocks.Interfaces.RealOutput;
+     import Modelica.Math.tanh;
+
+     // Nastavovací parametry přístupné z GUI
+     parameter Real scale = 4.0 "Strmost přechodu (doporučeno 3 až 5)";
+
+     // Konektory pro propojení s ostatními bloky
+     RealInput u
+                "input signál x" annotation (Placement(transformation(extent={{-140,-20},{-100,20}})));
+     RealOutput y "ohtput signál y" annotation (Placement(transformation(extent={{100,-20},{140,20}})));
+
+    protected
+     parameter Real tanh_scale = tanh(scale) "Předpočítaný normalizační faktor pro vyšší výkon";
+
+    equation
+     // Výpočet výstupu s vyhlazeným přechodem a ochranou hranic
+     y = if u <= 0.0 then 0.0
+         else if u >= 1.0 then 1.0
+         else 0.5 * (tanh(scale * (2.0 * u - 1.0)) / tanh_scale + 1.0);
+
+     // Grafické ikony pro zobrazení v diagramu
+     annotation (Icon(graphics={
+           Rectangle(extent={{-100,-100},{100,100}}, lineColor={0,0,255}),
+           Line(points={{-90,-60},{-20,-60},{20,60},{90,60}}, color={0,0,255}, thickness=0.5),
+           Text(extent={{-80,-90},{80,-70}}, textString="tanh step")}));
+    end TanhStepBlock;
+
+    model TestTgBlock
+       extends Modelica.Icons.Example;
+      TanhStepBlock tanhStepBlock
+        annotation (Placement(transformation(extent={{-10,-10},{10,10}})));
+      Bodylight.Types.Constants.FractionConst currentValue(k(displayUnit="1")
+           = 1.2)
+        annotation (Placement(transformation(extent={{-78,20},{-70,28}})));
+      Bodylight.Types.Constants.FractionConst finalValue(k(displayUnit="1") = 4)
+        annotation (Placement(transformation(extent={{-78,-18},{-70,-10}})));
+      Modelica.Blocks.Math.Division division1
+        annotation (Placement(transformation(extent={{-48,-8},{-28,12}})));
+      Modelica.Blocks.Math.Product product1
+        annotation (Placement(transformation(extent={{40,-18},{60,2}})));
+      Modelica.Blocks.Sources.Ramp ramp(
+        height=280,
+        duration=200,
+        offset=120)
+        annotation (Placement(transformation(extent={{-78,48},{-48,78}})));
+      Modelica.Blocks.Math.Division division2
+        annotation (Placement(transformation(extent={{-14,46},{6,66}})));
+      Bodylight.Types.Constants.FractionConst finalValue1(k(displayUnit="1") =
+          400)
+        annotation (Placement(transformation(extent={{-42,46},{-34,54}})));
+      TanhStepBlock tanhStepBlock1
+        annotation (Placement(transformation(extent={{20,46},{40,66}})));
+      Modelica.Blocks.Math.Product product2
+        annotation (Placement(transformation(extent={{56,40},{76,60}})));
+    equation
+      connect(currentValue.y, division1.u1) annotation (Line(points={{-69,24},{
+              -60,24},{-60,8},{-50,8}}, color={0,0,127}));
+      connect(finalValue.y, division1.u2) annotation (Line(points={{-69,-14},{
+              -58,-14},{-58,-4},{-50,-4}}, color={0,0,127}));
+      connect(division1.y, tanhStepBlock.u)
+        annotation (Line(points={{-27,2},{-27,0},{-12,0}}, color={0,0,127}));
+      connect(tanhStepBlock.y, product1.u1) annotation (Line(points={{12,0},{30,
+              0},{30,-2},{38,-2}}, color={0,0,127}));
+      connect(finalValue.y, product1.u2) annotation (Line(points={{-69,-14},{
+              -16,-14},{-16,-16},{30,-16},{30,-14},{38,-14}}, color={0,0,127}));
+      connect(ramp.y, division2.u1) annotation (Line(points={{-46.5,63},{-40,63},
+              {-40,62},{-16,62}}, color={0,0,127}));
+      connect(finalValue1.y, division2.u2)
+        annotation (Line(points={{-33,50},{-16,50}}, color={0,0,127}));
+      connect(division2.y, tanhStepBlock1.u)
+        annotation (Line(points={{7,56},{18,56}}, color={0,0,127}));
+      connect(tanhStepBlock1.y, product2.u1)
+        annotation (Line(points={{42,56},{54,56}}, color={0,0,127}));
+      connect(product2.u2, division2.u2) annotation (Line(points={{54,44},{16,
+              44},{16,40},{-24,40},{-24,50},{-16,50}}, color={0,0,127}));
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+            coordinateSystem(preserveAspectRatio=false)));
+    end TestTgBlock;
   end models;
 
   package FeMetabolism
@@ -1801,8 +1879,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.MassFlowRateInput Liver_in "Fe input from liver" annotation (
           Placement(transformation(extent={{-120,72},{-92,100}}),
             iconTransformation(extent={{-120,72},{-92,100}})));
-      Bodylight.Types.RealIO.MassFlowRateInput Spleen_in "Fe input from spleen" annotation
-        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+      Bodylight.Types.RealIO.MassFlowRateInput Spleen_in "Fe input from spleen" annotation (
+         Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
               extent={{-120,42},{-92,70}})));
       Bodylight.Types.RealIO.MassFlowRateInput Duodenum_in "Fe input from duodenum" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-120,12},{-92,40}})));
@@ -1812,8 +1890,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate"
         annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-118,-68},{-90,-40}})));
-      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation
-        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation (
+         Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
           extent={{-118,-100},{-90,-72}})));
 
       Bodylight.Types.RealIO.MassFlowRateOutput Liver_out "Fe output to liver" annotation (
@@ -2047,8 +2125,8 @@ organs"),   Text(
                 72},{-92,100}}), iconTransformation(extent={{-120,58},{-92,86}})));
       Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-120,-52},{-92,-24}})));
-      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation
-        (Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
+      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation (
+         Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
           extent={{-120,-90},{-92,-62}})));
       Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out "Fe output to spleen" annotation (Placement(transformation(extent={{96,76},{116,96}}),
             iconTransformation(extent={{94,-10},{114,10}})));
@@ -2364,10 +2442,9 @@ organs"),   Text(
 
     model Test_Liver
                      extends Modelica.Icons.Example
-      annotation (
-
-                  Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
+
       Liver liver
         annotation (Placement(transformation(extent={{-20,-20},{20,20}})));
       Bodylight.Types.Constants.MassFlowRateConst Fe_serum(k(displayUnit=
@@ -2642,10 +2719,9 @@ organs"),   Text(
 
     model Test_OtherOrgans
       extends Modelica.Icons.Example
-      annotation (
-
-                  Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
+
       OtherOrgans otherOrgans
         annotation (Placement(transformation(extent={{-20,-20},{40,40}})));
       Bodylight.Types.Constants.MassFlowRateConst Fe_serum(k(displayUnit=
