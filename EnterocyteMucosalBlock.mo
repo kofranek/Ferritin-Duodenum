@@ -1724,12 +1724,20 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         annotation (Placement(transformation(extent={{-92,18},{-72,38}})));
       Modelica.Blocks.Sources.Constant const1(k=400)
         annotation (Placement(transformation(extent={{-90,-16},{-70,4}})));
+      FeMetabolism.TanhAndIntegrater tanhAndIntegrater(duration=5)
+        annotation (Placement(transformation(extent={{-36,-50},{-16,-30}})));
     equation
       connect(const1.y, tanh.toValue) annotation (Line(points={{-69,-6},{-42,-6},
               {-42,-6.4},{-37.2,-6.4}},
                                     color={0,0,127}));
       connect(const.y, tanh.fromValue) annotation (Line(points={{-71,28},{-44,
               28},{-44,2.6},{-37.2,2.6}}, color={0,0,127}));
+      connect(tanhAndIntegrater.fromValue, tanh.fromValue) annotation (Line(
+            points={{-37.2,-33.4},{-56,-33.4},{-56,28},{-44,28},{-44,2.6},{
+              -37.2,2.6}}, color={0,0,127}));
+      connect(tanhAndIntegrater.toValue, tanh.toValue) annotation (Line(points=
+              {{-37.2,-37},{-60,-37},{-60,-6},{-42,-6},{-42,-6.4},{-37.2,-6.4}},
+            color={0,0,127}));
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end TestTanh;
@@ -3088,7 +3096,8 @@ organs"),   Text(
     model Tanh
       "Tanh model is designed to gradually change the value from fromValue 
   to toValue over the time (in seconds) 
-  specified by the duration parameter."
+  specified by the duration parameter.
+  Can be inverted using the reverse parameter or cycled back using the return parameter."
      Modelica.Blocks.Interfaces.RealInput fromValue annotation (Placement(
            transformation(extent={{-174,-132},{-134,-92}}),
                                                        iconTransformation(extent={{
@@ -3097,10 +3106,13 @@ organs"),   Text(
            transformation(extent={{-176,-52},{-136,-12}}),
                                                         iconTransformation(extent={{-124,
                 -36},{-100,-12}})));
-     parameter Modelica.Units.SI.Time duration = 5.0 "Transition duration in seconds";
+     parameter Modelica.Units.SI.Time duration = 1.0 "Transition duration in seconds";
+
+     parameter Boolean reverse = false "If true, transition direction is inverted";
+     parameter Boolean returnTrip = false "If true, completes a full round-trip within duration";
 
 
-     models.TanhStepBlock tanhStepBlock
+     TanhStepBlock tanhStepBlock
        annotation (Placement(transformation(extent={{-20,-64},{4,-40}})));
      Modelica.Blocks.Interfaces.RealOutput currentValue annotation (Placement(
             transformation(extent={{94,-120},{120,-94}}), iconTransformation(extent
@@ -3114,7 +3126,8 @@ organs"),   Text(
      Modelica.Blocks.Math.Add add
        annotation (Placement(transformation(extent={{64,-116},{84,-96}})));
 
-      Modelica.Blocks.Sources.Constant constDuration(k=1.0/duration)
+      // Rychlost integrace: Pokud jedeme tam i zpět, musíme běžet 2x rychleji
+      Modelica.Blocks.Sources.Constant constDuration(k = if returnTrip then 2.0/duration else 1.0/duration)
         "Constant for velocity integration"
         annotation (Placement(transformation(extent={{-126,-18},{-110,-2}})));
       Modelica.Blocks.Continuous.Integrator rampGen(
@@ -3123,66 +3136,63 @@ organs"),   Text(
       Modelica.Blocks.Math.Product rampScale "Multiplies time by toValue"
         annotation (Placement(transformation(extent={{-46,-20},{-32,-6}})));
 
+    protected
+      Real rawRamp "Pure linearly increasing ramp from 0 to 1 (or 0 to 2)";
+      Real effectiveRamp "Mirrored ramp: 0->1->0 if returnTrip=true, otherwise 0->1";
+      Real baseStep "Normalized step from tanhStepBlock";
+      Real effectiveStep "Final step handling reverse logic";
+
     equation
+      // OPRAVA PROPOJENÍ VSTUPU DO DĚLENÍ:
+      // Původní: connect(rampScale.y, division.u1);
+      // Nový stav: Výstup z rampScale nejdříve znormalizujeme na rozsah 0 až 1 (nebo 2)
+      rawRamp = rampScale.y / (if toValue > 0.001 or toValue < -0.001 then toValue else 1.0);
+
+      // Zrcadlení času: Pokud jsme za polovinou celkového času (rawRamp > 1.0), začneme lineárně klesat
+      effectiveRamp = if returnTrip and rawRamp > 1.0 then 2.0 - rawRamp else rawRamp;
+
+      // Vstupem do čitatele dělení je nyní již dokonale symetrická rampa vynásobená toValue
+      division.u1 = effectiveRamp * toValue;
+
      connect(division.y, tanhStepBlock.u)
        annotation (Line(points={{-31,-52},{-22.4,-52}}, color={0,0,127}));
-     connect(tanhStepBlock.y, currentValueCalculation.u1)
-       annotation (Line(points={{6.4,-52},{6.4,-54},{22,-54}},
-                                                     color={0,0,127}));
+
+     // Vyhodnocení výstupu z Tanh bloku (který teď hladce vyjede nahoru a sjede dolů)
+     baseStep = tanhStepBlock.y;
+
+     // Aplikace parametru reverse na výsledný symetrický krok
+     effectiveStep = if reverse then 1.0 - baseStep else baseStep;
+     currentValueCalculation.u1 = effectiveStep;
+
      connect(feedback2.u1, toValue) annotation (Line(points={{-10,-88},{-102,-88},{-102,
-              -58},{-116,-58},{-116,-32},{-156,-32}},
-                                                 color={0,0,127}));
+              -58},{-116,-58},{-116,-32},{-156,-32}}, color={0,0,127}));
      connect(fromValue, feedback2.u2) annotation (Line(points={{-154,-112},{-2,-112},
-              {-2,-96}},                   color={0,0,127}));
+              {-2,-96}}, color={0,0,127}));
      connect(feedback2.y, currentValueCalculation.u2) annotation (Line(points={{7,-88},
               {14,-88},{14,-66},{22,-66}},color={0,0,127}));
-     connect(add.u2, feedback2.u2)
-       annotation (Line(points={{62,-112},{-2,-112},{-2,-96}},
-                                                             color={0,0,127}));
+     connect(add.u2, feedback2.u2) annotation (Line(points={{62,-112},{-2,-112},{-2,-96}}, color={0,0,127}));
      connect(add.u1, currentValueCalculation.y) annotation (Line(points={{62,-100},{
               52,-100},{52,-60},{45,-60}}, color={0,0,127}));
-      connect(add.y, currentValue) annotation (Line(points={{85,-106},{94,-106},{94,
+     connect(add.y, currentValue) annotation (Line(points={{85,-106},{94,-106},{94,
               -107},{107,-107}}, color={0,0,127}));
      connect(division.u2, toValue) annotation (Line(points={{-54,-58},{-116,-58},{-116,
-              -32},{-156,-32}},                  color={0,0,127}));
-      connect(constDuration.y, rampGen.u) annotation (Line(points={{-109.2,-10},{-109.2,
-              -9},{-93.4,-9}}, color={0,0,127}));
-      connect(rampGen.y, rampScale.u1) annotation (Line(points={{-77.3,-9},{-77.3,-8},
-              {-54,-8},{-54,-8.8},{-47.4,-8.8}},  color={0,0,127}));
-      connect(rampScale.u2, toValue) annotation (Line(points={{-47.4,-17.2},{-74,-17.2},
-              {-74,-32},{-156,-32}},                   color={0,0,127}));
-      connect(rampScale.y, division.u1) annotation (Line(points={{-31.3,-13},{-30,-13},
-              {-30,-30},{-68,-30},{-68,-46},{-54,-46}}, color={0,0,127}));
+              -32},{-156,-32}}, color={0,0,127}));
+     connect(constDuration.y, rampGen.u) annotation (Line(points={{-109.2,-10},
+              {-109.2,-9},{-93.4,-9}}, color={0,0,127}));
+     connect(rampGen.y, rampScale.u1) annotation (Line(points={{-77.3,-9},{
+              -77.3,-8},{-54,-8},{-54,-8.8},{-47.4,-8.8}}, color={0,0,127}));
+     connect(rampScale.u2, toValue) annotation (Line(points={{-47.4,-17.2},{
+              -74,-17.2},{-74,-32},{-156,-32}}, color={0,0,127}));
+
+     // Původní řádek connect(rampScale.y, division.u1) byl nahrazen textovou rovnicí výše.
+
      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
-           Rectangle(
-             extent={{-100,100},{100,-100}},
-             lineColor={28,108,200},
-             fillColor={255,255,0},
-             fillPattern=FillPattern.Solid),
-           Text(
-             extent={{-94,74},{-12,60}},
-             textColor={28,108,200},
-             horizontalAlignment=TextAlignment.Left,
-             textString="fromValue"),
-           Text(
-             extent={{-96,-16},{-10,-30}},
-             textColor={28,108,200},
-             horizontalAlignment=TextAlignment.Left,
-             textString="toValue"),
-           Text(
-             extent={{14,28},{96,14}},
-             textColor={28,108,200},
-             horizontalAlignment=TextAlignment.Right,
-              textString="currentValue"),
-            Text(
-              extent={{-120,-102},{120,-122}},
-              textColor={28,108,200},
-              textString="%name"),
-            Text(
-              extent={{-90,-50},{76,-68}},
-              textColor={28,108,200},
-              textString=" ")}),           Diagram(coordinateSystem(
-             preserveAspectRatio=false)));
+           Rectangle(extent={{-100,100},{100,-100}}, lineColor={28,108,200}, fillColor={255,255,0}, fillPattern=FillPattern.Solid),
+           Text(extent={{-94,74},{-12,60}}, textColor={28,108,200}, horizontalAlignment=TextAlignment.Left, textString="fromValue"),
+           Text(extent={{-96,-16},{-10,-30}}, textColor={28,108,200}, horizontalAlignment=TextAlignment.Left, textString="toValue"),
+           Text(extent={{14,28},{96,14}}, textColor={28,108,200}, horizontalAlignment={TextAlignment.Right}, textString="currentValue"),
+           Text(extent={{-120,-102},{120,-122}}, textColor={28,108,200}, textString="%name"),
+           Text(extent={{-90,-50},{76,-68}}, textColor={28,108,200}, textString=" ")}),         Diagram(coordinateSystem(preserveAspectRatio=false)));
     end Tanh;
 
     model TanhAndIntegrater
@@ -3238,16 +3248,17 @@ organs"),   Text(
                         color={0,0,127}));
      connect(gain.y, int.u)
        annotation (Line(points={{-19,54},{10,54}}, color={0,0,127}));
-     connect(int.y, currentValue) annotation (Line(points={{33,54},{84,54},{84,
-             47},{109,47}},    color={0,0,127}));
-     connect(feedback1.u2, currentValue) annotation (Line(points={{-24,17.6},{-26,17.6},
-             {-26,6},{84,6},{84,47},{109,47}},   color={0,0,127}));
+     connect(int.y, currentValue) annotation (Line(points={{33,54},{86,54},{86,
+              47},{109,47}},   color={0,0,127}));
+     connect(feedback1.u2, currentValue) annotation (Line(points={{-24,17.6},{
+              -24,6},{86,6},{86,47},{109,47}},   color={0,0,127}));
      connect(division.y, tanhStepBlock.u)
        annotation (Line(points={{-31,-50},{-24.4,-50}}, color={0,0,127}));
      connect(tanhStepBlock.y, currentValueCalculation.u1)
        annotation (Line(points={{4.4,-50},{22,-50}}, color={0,0,127}));
-     connect(feedback1.u1, toValue) annotation (Line(points={{-30.4,24},{-114,24},{
-             -114,8},{-140,8}}, color={0,0,127}));
+     connect(feedback1.u1, toValue) annotation (Line(points={{-30.4,24},{-116,
+              24},{-116,8},{-140,8}},
+                                color={0,0,127}));
      connect(feedback2.u1, toValue) annotation (Line(points={{-8,-90},{-64,-90},{-64,
              -88},{-116,-88},{-116,8},{-140,8}}, color={0,0,127}));
      connect(fromValue, feedback2.u2) annotation (Line(points={{-44,-122},{-22,-122},
@@ -3298,6 +3309,35 @@ organs"),   Text(
              textString="currentValue1")}),Diagram(coordinateSystem(
              preserveAspectRatio=false)));
     end TanhAndIntegrater;
+
+    block TanhStepBlock "Blok pro hladký přechod mezi 0 a 1 pomocí tanh"
+     import Modelica.Blocks.Interfaces.RealInput;
+     import Modelica.Blocks.Interfaces.RealOutput;
+     import Modelica.Math.tanh;
+
+     // Nastavovací parametry přístupné z GUI
+     parameter Real scale = 4.0 "Strmost přechodu (doporučeno 3 až 5)";
+
+     // Konektory pro propojení s ostatními bloky
+     RealInput u
+                "input signál x" annotation (Placement(transformation(extent={{-140,-20},{-100,20}})));
+     RealOutput y "ohtput signál y" annotation (Placement(transformation(extent={{100,-20},{140,20}})));
+
+    protected
+     parameter Real tanh_scale = tanh(scale) "Předpočítaný normalizační faktor pro vyšší výkon";
+
+    equation
+     // Výpočet výstupu s vyhlazeným přechodem a ochranou hranic
+     y = if u <= 0.0 then 0.0
+         else if u >= 1.0 then 1.0
+         else 0.5 * (tanh(scale * (2.0 * u - 1.0)) / tanh_scale + 1.0);
+
+     // Grafické ikony pro zobrazení v diagramu
+     annotation (Icon(graphics={
+           Rectangle(extent={{-100,-100},{100,100}}, lineColor={0,0,255}),
+           Line(points={{-90,-60},{-20,-60},{20,60},{90,60}}, color={0,0,255}, thickness=0.5),
+           Text(extent={{-80,-90},{80,-70}}, textString="tanh step")}));
+    end TanhStepBlock;
   end FeMetabolism;
   annotation (uses(Modelica(version="4.0.0"), Bodylight(version="1.0")));
 end EnterocyteMucosalBlock;
