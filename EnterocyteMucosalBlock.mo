@@ -1,4 +1,4 @@
-﻿within ;
+within ;
 package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
   package models
@@ -3126,7 +3126,7 @@ organs"),   Text(
      Modelica.Blocks.Math.Add add
        annotation (Placement(transformation(extent={{64,-116},{84,-96}})));
 
-      // Rychlost integrace: Pokud jedeme tam i zpět, musíme běžet 2x rychleji
+      // Integration speed: If we go there and back, we have to run 2x faster
       Modelica.Blocks.Sources.Constant constDuration(k = if returnTrip then 2.0/duration else 1.0/duration)
         "Constant for velocity integration"
         annotation (Placement(transformation(extent={{-126,-18},{-110,-2}})));
@@ -3143,24 +3143,24 @@ organs"),   Text(
       Real effectiveStep "Final step handling reverse logic";
 
     equation
-      // OPRAVA PROPOJENÍ VSTUPU DO DĚLENÍ:
-      // Původní: connect(rampScale.y, division.u1);
-      // Nový stav: Výstup z rampScale nejdříve znormalizujeme na rozsah 0 až 1 (nebo 2)
+      // CORRECTION OF INPUT CONNECTION TO DIVISION:
+      // Original: connect(rampScale.y, division.u1);
+      // New state: We first normalize the output from rampScale to a range of 0 to 1 (or 2)
       rawRamp = rampScale.y / (if toValue > 0.001 or toValue < -0.001 then toValue else 1.0);
 
-      // Zrcadlení času: Pokud jsme za polovinou celkového času (rawRamp > 1.0), začneme lineárně klesat
+      // Time mirroring: If we are past half of the total time (rawRamp > 1.0), we start to decrease linearly
       effectiveRamp = if returnTrip and rawRamp > 1.0 then 2.0 - rawRamp else rawRamp;
 
-      // Vstupem do čitatele dělení je nyní již dokonale symetrická rampa vynásobená toValue
+      // The input to the division numerator is now a perfectly symmetrical ramp multiplied by toValue
       division.u1 = effectiveRamp * toValue;
 
      connect(division.y, tanhStepBlock.u)
        annotation (Line(points={{-31,-52},{-22.4,-52}}, color={0,0,127}));
 
-     // Vyhodnocení výstupu z Tanh bloku (který teď hladce vyjede nahoru a sjede dolů)
+     // Evaluating the output from the Tanh block (which now smoothly goes up and down)
      baseStep = tanhStepBlock.y;
 
-     // Aplikace parametru reverse na výsledný symetrický krok
+     // Applying the reverse parameter to the resulting symmetric step
      effectiveStep = if reverse then 1.0 - baseStep else baseStep;
      currentValueCalculation.u1 = effectiveStep;
 
@@ -3184,7 +3184,7 @@ organs"),   Text(
      connect(rampScale.u2, toValue) annotation (Line(points={{-47.4,-17.2},{
               -74,-17.2},{-74,-32},{-156,-32}}, color={0,0,127}));
 
-     // Původní řádek connect(rampScale.y, division.u1) byl nahrazen textovou rovnicí výše.
+     // The original line connect(rampScale.y, division.u1) has been replaced with the text equation above.
 
      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
            Rectangle(extent={{-100,100},{100,-100}}, lineColor={28,108,200}, fillColor={255,255,0}, fillPattern=FillPattern.Solid),
@@ -3200,9 +3200,9 @@ organs"),   Text(
            transformation(extent={{-64,-142},{-24,-102}}),
                                                        iconTransformation(extent={{
                -124,54},{-100,78}})));
-     Modelica.Blocks.Interfaces.RealOutput currentValue annotation (Placement(
-           transformation(extent={{96,34},{122,60}}), iconTransformation(extent={{100,
-               30},{120,50}})));
+     Modelica.Blocks.Interfaces.RealOutput currentValueUsingIntegrator
+        annotation (Placement(transformation(extent={{96,34},{122,60}}),
+            iconTransformation(extent={{100,30},{120,50}})));
      Modelica.Blocks.Interfaces.RealInput toValue annotation (Placement(
            transformation(extent={{-160,-12},{-120,28}}),
                                                         iconTransformation(extent={
@@ -3218,11 +3218,9 @@ organs"),   Text(
 
      models.TanhStepBlock tanhStepBlock
        annotation (Placement(transformation(extent={{-22,-62},{2,-38}})));
-     Modelica.Blocks.Interfaces.RealOutput currentValue1
-                                                        annotation (Placement(
-           transformation(extent={{94,-120},{120,-94}}),
-                                                      iconTransformation(extent={{100,-36},
-               {120,-16}})));
+     Modelica.Blocks.Interfaces.RealOutput currentValueUsingTanh annotation (
+          Placement(transformation(extent={{94,-120},{120,-94}}),
+            iconTransformation(extent={{100,-36},{120,-16}})));
      Modelica.Blocks.Math.Product currentValueCalculation
        annotation (Placement(transformation(extent={{24,-66},{44,-46}})));
      Modelica.Blocks.Math.Division division
@@ -3248,10 +3246,10 @@ organs"),   Text(
                         color={0,0,127}));
      connect(gain.y, int.u)
        annotation (Line(points={{-19,54},{10,54}}, color={0,0,127}));
-     connect(int.y, currentValue) annotation (Line(points={{33,54},{86,54},{86,
-              47},{109,47}},   color={0,0,127}));
-     connect(feedback1.u2, currentValue) annotation (Line(points={{-24,17.6},{
-              -24,6},{86,6},{86,47},{109,47}},   color={0,0,127}));
+      connect(int.y, currentValueUsingIntegrator) annotation (Line(points={{33,
+              54},{86,54},{86,47},{109,47}}, color={0,0,127}));
+      connect(feedback1.u2, currentValueUsingIntegrator) annotation (Line(
+            points={{-24,17.6},{-24,6},{86,6},{86,47},{109,47}}, color={0,0,127}));
      connect(division.y, tanhStepBlock.u)
        annotation (Line(points={{-31,-50},{-24.4,-50}}, color={0,0,127}));
      connect(tanhStepBlock.y, currentValueCalculation.u1)
@@ -3269,8 +3267,8 @@ organs"),   Text(
        annotation (Line(points={{58,-112},{0,-112},{0,-98}}, color={0,0,127}));
      connect(add.u1, currentValueCalculation.y) annotation (Line(points={{58,-100},
              {52,-100},{52,-56},{45,-56}}, color={0,0,127}));
-     connect(add.y, currentValue1) annotation (Line(points={{81,-106},{94,-106},{94,
-             -107},{107,-107}}, color={0,0,127}));
+      connect(add.y, currentValueUsingTanh) annotation (Line(points={{81,-106},
+              {94,-106},{94,-107},{107,-107}}, color={0,0,127}));
      connect(division.u2, toValue) annotation (Line(points={{-54,-56},{-66,-56},{-66,
               -82},{-116,-82},{-116,8},{-140,8}},color={0,0,127}));
       connect(constOne.y, rampGen.u) annotation (Line(points={{-125.2,-14},{-125.2,-13},
