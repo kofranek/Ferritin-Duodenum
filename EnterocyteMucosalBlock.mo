@@ -1,4 +1,4 @@
-﻿within ;
+within ;
 package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
   package models
@@ -396,7 +396,12 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         - FPN_Activation;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
-            coordinateSystem(preserveAspectRatio=false)));
+            coordinateSystem(preserveAspectRatio=false)),
+        experiment(
+          StopTime=1000000,
+          Interval=2000,
+          Tolerance=1e-07,
+          __Dymola_Algorithm="Dassl"));
     end EnterocyteMucosalBlockModel;
 
     model EnterocyteMucosalBlockShortModel "Enterocyte mucosal block (short)"
@@ -408,13 +413,13 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         start = 2.375189822e-9 * 1e3) "FT-cage";
       Bodylight.Types.Concentration core(
         displayUnit = "mol/L",
-        start = 4*3.682217017e-6 * 1e3) "core";
+        start = 3.682217017e-6 * 1e3) "core";
       Bodylight.Types.Concentration DFP(
         displayUnit = "mol/L",
         start = 1.344769304e-10 * 1e3) "diferric peroxo complex";
       Bodylight.Types.Concentration LIP(
         displayUnit = "mol/L",
-        start = 4*1.223884748e-7 * 1e3) "labile iron pool";
+        start = 1.223884748e-7 * 1e3) "labile iron pool";
       Bodylight.Types.Concentration IRPs_active(
         displayUnit = "mol/L",
         start = 6.889335935e-11 * 1e3) "iron regulatory proteins (active)";
@@ -1627,7 +1632,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       extends Modelica.Icons.Example;
       IntracellularIronDistribution intracellularIronDistribution
         annotation (Placement(transformation(extent={{-40,-40},{40,40}})));
-      Bodylight.Types.Constants.FractionConst fraction(k=4)
+      Bodylight.Types.Constants.FractionConst fraction(k=1)
         annotation (Placement(transformation(extent={{-94,68},{-86,76}})));
     equation
       connect(fraction.y, intracellularIronDistribution.StateScale) annotation (
