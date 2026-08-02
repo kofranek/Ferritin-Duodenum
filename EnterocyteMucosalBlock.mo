@@ -2234,8 +2234,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
               extent={{-70,-72},{98,-92}},
               textColor={28,108,200},
               horizontalAlignment=TextAlignment.Right,
-              textString="Fract_Fe_in_Ft")}),
-                                        Diagram(coordinateSystem(
+              textString="Fract_LIP")}),Diagram(coordinateSystem(
               preserveAspectRatio=false)));
     end ShortModel;
 
@@ -2423,6 +2422,87 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       annotation (Diagram(coordinateSystem(extent={{-100,-120},{200,100}})),
           Icon(coordinateSystem(extent={{-100,-120},{200,100}})));
     end Test_FT_cage_control;
+
+    model FerritinSaturation
+      "Calculating the saturation ratio of ferritin"
+
+
+      Bodylight.Types.RealIO.ConcentrationInput FT_cage(displayUnit="mol/L")
+                               "FT-cage" annotation (Placement(
+            transformation(extent={{-250,62},{-210,102}}), iconTransformation(
+            extent={{-128,60},{-100,88}})));
+      Bodylight.Types.RealIO.ConcentrationInput Fe_in_FT
+        "Fe in ferritin concentration" annotation (Placement(
+            transformation(extent={{-248,26},{-228,46}}), iconTransformation(extent={{-122,
+                -48},{-102,-28}})));
+      Bodylight.Types.RealIO.FractionOutput FerritinSaturationFraction
+        "Ferritin saturation Fraction" annotation (Placement(transformation(extent={{
+                -248,-26},{-228,-6}}), iconTransformation(extent={{100,10},{120,30}})));
+    equation
+      FerritinSaturationFraction = Fe_in_FT / FT_cage / 4500;
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+            Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-98,-102},{100,-142}},
+              textColor={28,108,200},
+              textString="%name"),
+            Text(
+              extent={{-96,86},{62,68}},
+              textColor={28,108,200},
+              textString="FT_cage",
+              horizontalAlignment=TextAlignment.Left),
+            Text(
+              extent={{-100,32},{96,12}},
+              textColor={28,108,200},
+              horizontalAlignment=TextAlignment.Right,
+              textString="FerritinSaturation"),
+            Text(
+              extent={{-98,-28},{38,-46}},
+              textColor={28,108,200},
+              horizontalAlignment=TextAlignment.Left,
+              textString="Fe_in_FT")}), Diagram(coordinateSystem(
+              preserveAspectRatio=false)));
+
+      /*
+  At 100% saturation of ferritin, 4500 iron molecules are bound
+  to one ferritin molecule.  
+  The number of iron molecules bound to one ferritin cage 
+  is the ratio (Fe_v_FT) / (FT_cage).
+  Therefore 
+  FerritinSaturationFraction = Fe_in_FT / FT_cage / 4500.
+  */
+
+    end FerritinSaturation;
+
+    model Test_FerritinSaturation
+      extends Modelica.Icons.Example;
+      Bodylight.Types.Constants.ConcentrationConst FT_cage(k(displayUnit=
+              "mol/l") = 2.699e-06)
+        annotation (Placement(transformation(extent={{-94,34},{-76,46}})));
+      Bodylight.Types.Constants.ConcentrationConst Fe_total(k(displayUnit=
+              "mmol/l") = 0.003805)
+        annotation (Placement(transformation(extent={{-92,12},{-80,26}})));
+      ShortModel shortModel
+        annotation (Placement(transformation(extent={{-12,-10},{54,46}})));
+      FerritinSaturation ferritinSaturation
+        annotation (Placement(transformation(extent={{2,-86},{66,-34}})));
+    equation
+      connect(FT_cage.y, shortModel.FT_cage) annotation (Line(points={{-73.75,
+              40},{-45.185,40},{-45.185,39.84},{-16.62,39.84}}, color={0,0,127}));
+      connect(shortModel.Fe_total, Fe_total.y) annotation (Line(points={{-16.62,
+              18},{-42,18},{-42,20},{-68,20},{-68,19},{-78.5,19}}, color={0,0,
+              127}));
+      connect(shortModel.Fe_in_FT, ferritinSaturation.Fe_in_FT) annotation (
+          Line(points={{57.3,13.52},{76,13.52},{76,-24},{-46,-24},{-46,-69.88},
+              {-1.84,-69.88}}, color={0,0,127}));
+      connect(ferritinSaturation.FT_cage, FT_cage.y) annotation (Line(points={{
+              -2.48,-40.76},{-32,-40.76},{-32,39.84},{-45.185,40},{-73.75,40}},
+            color={0,0,127}));
+    end Test_FerritinSaturation;
   end models;
 
   package FeMetabolism
