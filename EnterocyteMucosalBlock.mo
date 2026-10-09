@@ -2895,6 +2895,7 @@ organs"),   Text(
         displayUnit="h-1") = 0.055363 * 0.054621 / (60 * 60) "Fpnspl degradation rate (k12*k18, k18 = 0.054621), 0.0007/0.0038";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.014027 * 1e9 "Constant Fpn_spl production (k27), 0.005/0.028";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.4694 * 1e9 "Constant Fpnspl degradation (k13*k19, k19 = 4.4694), 9.2/73.7";
+      parameter Real FPN_knockout = 1;
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
@@ -2922,7 +2923,7 @@ organs"),   Text(
 
       der(FPN) = FPN_synthesis - FPN_degradation;
 
-      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_synthesis = FPN_knockout * K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
@@ -3026,6 +3027,7 @@ organs"),   Text(
         displayUnit="h-1") = 0.055363 / (60 * 60) "Fpnliv degradation rate (k12), 0.01/0.06";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.0033177 * 1e9 "Constant Fpn_liv production (k17), 0.002/0.006";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 1e9 "Constant Fpnliv degradation (k13), 2.11/12.93";
+      parameter Real FPN_knockout = 1;
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
@@ -3053,7 +3055,7 @@ organs"),   Text(
 
       der(FPN) = FPN_synthesis - FPN_degradation;
 
-      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_synthesis = FPN_knockout * K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
@@ -3169,6 +3171,7 @@ organs"),   Text(
         displayUnit="h-1") = 0.055363 * 0.3815 / (60 * 60) "Fpnduo degradation rate (k12*k15, k15 = 0.3815), 0.0056/0.147";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.16007 * 1e9 "Constant Fpn_duo production (k46), 0.06/0.49";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 0.55631 * 1e9 "Constant Fpnduo degradation (k13*k16, k16 = 0.55631), 0.78/4.16";
+      parameter Real FPN_knockout = 1;
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
@@ -3204,7 +3207,7 @@ organs"),   Text(
 
       der(FPN) = FPN_synthesis - FPN_degradation;
 
-      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_synthesis = FPN_knockout * K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
@@ -3320,6 +3323,7 @@ organs"),   Text(
         displayUnit="h-1") = 0.055363 * 0.52232 / (60 * 60) "Fpnres degradation rate (k12*k38, k38 = 0.52232), 0.025/0.129";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.11376 * 1e9 "Constant Fpn_res production (k47), 0.004/0.152";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.5163 * 1e9 "Constant Fpnres degradation (k13*k39, k39 = 4.5163), 3.7/38.1";
+      parameter Real FPN_knockout = 1;
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
@@ -3348,7 +3352,7 @@ organs"),   Text(
 
       der(FPN) = FPN_synthesis - FPN_degradation;
 
-      FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
+      FPN_mRNA_synthesis = FPN_knockout * K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
