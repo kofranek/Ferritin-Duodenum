@@ -2097,12 +2097,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.MassFlowRateInput OtherOrgans_in "Fe input from other organs" annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-120,-18},{-92,10}})));
 
-      Bodylight.Types.RealIO.MassFlowRateInput Transfusion "transfusion rate"
+      Bodylight.Types.RealIO.MassFlowRateInput Infusion "Fe infusion rate"
         annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-118,-68},{-90,-40}})));
-      Bodylight.Types.RealIO.MassFlowRateInput Bleeding "bleeding rate" annotation (
-         Placement(transformation(extent={{-132,50},{-92,90}}), iconTransformation(
-          extent={{-118,-100},{-90,-72}})));
+
 
       Bodylight.Types.RealIO.MassFlowRateOutput Liver_out "Fe output to liver" annotation (
           Placement(transformation(extent={{96,76},{116,96}}), iconTransformation(
@@ -2137,6 +2135,18 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Bodylight.Types.Frequency v_res(
         displayUnit="h-1") = 6.3206 / (60 * 60) "Other organs uptake rate (k34), 5.4/10.0";
 
+      //auto/manual regulation
+
+      parameter Real Fe_regulation = 1 "Fe regulation: 1 - auto, 0 - manual";
+      parameter Bodylight.Types.Mass Fe_manual(
+        displayUnit = "ug") = 1.51304 * 1e-9;
+      Bodylight.Types.Mass Fe_auto(
+        start = 1.51304 * 1e-9,
+        displayUnit = "ug");
+      Real Fe_regulation_switcher;
+
+
+
     initial equation
 
       der(Fe) = 0; // eq 16.
@@ -2151,10 +2161,26 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       OtherOrgans_out = v_res * Fe;
 
-      Fe_input = Liver_in + Spleen_in + Duodenum_in + OtherOrgans_in + Transfusion;
-      Fe_output = Liver_out + BoneMarrow_out + Duodenum_out + OtherOrgans_out + Bleeding;
+      Fe_input = Liver_in + Spleen_in + Duodenum_in + OtherOrgans_in + Infusion;
+      Fe_output = Liver_out + BoneMarrow_out + Duodenum_out + OtherOrgans_out;
 
-      der(Fe) = Fe_input - Fe_output;
+    //  der(Fe) = Fe_input - Fe_output;
+
+      Fe_regulation_switcher = smooth(1, noEvent(if Fe_regulation > 0.5 then 1.0 else 0));
+
+      der(Fe_auto) = Fe_regulation_switcher * (Fe_input - Fe_output);
+      Fe = Fe_regulation_switcher * Fe_auto + (1 - Fe_regulation_switcher) * Fe_manual;
+
+
+      //new
+
+
+
+
+
+
+
+
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
@@ -2199,13 +2225,9 @@ marrow"),   Text(
               textColor={28,108,200},
               textString="Other
 organs"),   Text(
-              extent={{-88,-44},{-28,-64}},
+              extent={{-92,-48},{-36,-62}},
               textColor={28,108,200},
-              textString="transfusion"),
-            Text(
-              extent={{-92,-78},{-38,-92}},
-              textColor={28,108,200},
-              textString="bleeding"),
+              textString="Infusion"),
             Text(
               extent={{54,-68},{102,-82}},
               textColor={28,108,200},
@@ -2731,6 +2753,8 @@ organs"),   Text(
         displayUnit = "ug.h-1") "Fe amount in duodenum: total input";
       Bodylight.Types.MassFlowRate Fe_output(
         displayUnit = "ug.h-1") "Fe amount in duodenum: total output";
+      Bodylight.Types.MassFlowRate Fe_stool(
+        displayUnit = "ug.h-1") "Fe leaving with the stool: food iron not absorbed plus shed enterocytes";
       Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
       parameter Bodylight.Types.Frequency k_synth(
@@ -2771,6 +2795,7 @@ organs"),   Text(
       // total input and output, for the flow chart (added for the simulator, 2026-10-10)
       Fe_input = Serum_in + Fe_absorption;
       Fe_output = Serum_out + Fe_loss;
+      Fe_stool = Food_in - Fe_absorption + Fe_loss;
 
       FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
@@ -3082,9 +3107,13 @@ organs"),   Text(
               extent={{94,74},{114,94}}), iconTransformation(extent={{94,74},{114,94}})));
 
       Bodylight.Types.Mass LPS(
+        displayUnit = "ug") "LPS (Lipopolysaccharide) ammount (s23)";
+      parameter Bodylight.Types.Mass LPS_given(
+        displayUnit = "ug") = 0 "LPS given so far, all doses together (the application adds 1 ug per press)";
+      Bodylight.Types.Mass LPS_degraded(
         start = 0,
         fixed = true,
-        displayUnit = "ug") "LPS (Lipopolysaccharide) ammount (s23)";
+        displayUnit = "ug") "LPS degraded so far";
       parameter Bodylight.Types.Frequency k_deg_LPS = 5.8560 / (60 * 60) "LPS degradation rate, 5.9/5.9";
 
       Bodylight.Types.Mass il6mRNA(
@@ -3109,9 +3138,12 @@ organs"),   Text(
 
     equation
 
-      der(LPS) = -k_deg_LPS * LPS;
+      // A dose is a step of LPS_given: LPS jumps at once, with no event, and what is left of it is what
+      // has not yet been degraded.
+      LPS = LPS_given - LPS_degraded;
+      der(LPS_degraded) = k_deg_LPS * LPS;
 
-      il6mRNA_in = LPS / (LPS + K_mRNA);
+      il6mRNA_in = LPS / (LPS + K_mRNA) * 1e-9 / (60 * 60);
       il6mRNA_out = k_deg_mRNA * il6mRNA;
 
       der(il6mRNA) = il6mRNA_in - il6mRNA_out;
@@ -3218,7 +3250,7 @@ organs"),   Text(
     model Test_Full
       extends Modelica.Icons.Example;
       Serum serum
-        annotation (Placement(transformation(extent={{-10,-14},{10,6}})));
+        annotation (Placement(transformation(extent={{-10,-12},{10,8}})));
       Liver liver
         annotation (Placement(transformation(extent={{-52,2},{-32,22}})));
       Spleen spleen
@@ -3237,24 +3269,27 @@ organs"),   Text(
         annotation (Placement(transformation(extent={{-50,60},{-30,80}})));
       Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
               "ug.h-1") = 0)
-        annotation (Placement(transformation(extent={{-40,-60},{-26,-48}})));
+        annotation (Placement(transformation(extent={{-40,-70},{-26,-58}})));
       Bodylight.Types.Constants.MassFlowRateConst bleeding(k(displayUnit=
               "ug.h-1") = 0)
-        annotation (Placement(transformation(extent={{-40,-76},{-26,-64}})));
+        annotation (Placement(transformation(extent={{-40,-84},{-26,-72}})));
       Bodylight.Types.Constants.MassFlowRateConst Fe_food(k(displayUnit=
               "ug.h-1") = 6.0731166666667e-11)
         annotation (Placement(transformation(extent={{-98,-22},{-84,-10}})));
+      Bodylight.Types.Constants.MassFlowRateConst Infusion(k(displayUnit=
+              "ug.h-1") = 0)
+        annotation (Placement(transformation(extent={{-42,-54},{-28,-42}})));
     equation
       connect(spleen.Serum_out, serum.Spleen_in) annotation (Line(points={{42.8,
-              34.8},{50,34.8},{50,10},{-20,10},{-20,1.6},{-10.6,1.6}}, color={0,
+              34.8},{50,34.8},{50,10},{-20,10},{-20,3.6},{-10.6,3.6}}, color={0,
               0,127}));
-      connect(duodenum.Serum_out, serum.Duodenum_in) annotation (Line(points={{
-              -31.2,-9.2},{-26,-9.2},{-26,-1.4},{-10.6,-1.4}}, color={0,0,127}));
+      connect(duodenum.Serum_out, serum.Duodenum_in) annotation (Line(points={{-31.2,
+              -9.2},{-26,-9.2},{-26,0.6},{-10.6,0.6}},         color={0,0,127}));
       connect(otherOrgans.Serum_out, serum.OtherOrgans_in) annotation (Line(
-            points={{10.8,-23.2},{16,-23.2},{16,-16},{-20,-16},{-20,-4.4},{
-              -10.6,-4.4}}, color={0,0,127}));
+            points={{10.8,-23.2},{16,-23.2},{16,-16},{-20,-16},{-20,-2.4},{
+              -10.6,-2.4}}, color={0,0,127}));
       connect(serum.BoneMarrow_out, boneMarrow.Serum_in) annotation (Line(
-            points={{10.6,2},{20,2},{20,-30},{25.4,-30}}, color={0,0,127}));
+            points={{10.6,4},{20,4},{20,-30},{25.4,-30}}, color={0,0,127}));
       connect(boneMarrow.RBC_out, rBC.BoneMarrow_in) annotation (Line(points={{
               46.6,-28},{48,-28},{48,1.2},{59.4,1.2}}, color={0,0,127}));
       connect(rBC.Spleen_out, spleen.RBC_in) annotation (Line(points={{80.4,-6},
@@ -3263,15 +3298,15 @@ organs"),   Text(
             points={{46.6,-32},{50,-32},{50,-4},{22,-4},{22,12},{8,12},{8,34.6},
               {21.4,34.6}}, color={0,0,127}));
       connect(serum.Liver_out, liver.Serum_in) annotation (Line(points={{10.6,
-              4.6},{12,4.6},{12,28},{-60,28},{-60,20.6},{-52.6,20.6}}, color={0,
+              6.6},{12,6.6},{12,28},{-60,28},{-60,20.6},{-52.6,20.6}}, color={0,
               0,127}));
       connect(liver.Serum_out, serum.Liver_in) annotation (Line(points={{-31.2,
-              20.8},{-26,20.8},{-26,4.6},{-10.6,4.6}}, color={0,0,127}));
-      connect(serum.Duodenum_out, duodenum.Serum_in) annotation (Line(points={{
-              10.6,-0.6},{14,-0.6},{14,-18},{-28,-18},{-28,-4},{-58,-4},{-58,
-              -9.4},{-52.6,-9.4}}, color={0,0,127}));
+              20.8},{-26,20.8},{-26,6.6},{-10.6,6.6}}, color={0,0,127}));
+      connect(serum.Duodenum_out, duodenum.Serum_in) annotation (Line(points={{10.6,
+              1.4},{14,1.4},{14,-18},{-28,-18},{-28,-4},{-58,-4},{-58,-9.4},{
+              -52.6,-9.4}},        color={0,0,127}));
       connect(serum.OtherOrgans_out, otherOrgans.Serum_in) annotation (Line(
-            points={{10.6,-3.2},{18,-3.2},{18,-20},{-16,-20},{-16,-23.4},{-10.6,
+            points={{10.6,-1.2},{18,-1.2},{18,-20},{-16,-20},{-16,-23.4},{-10.6,
               -23.4}}, color={0,0,127}));
       connect(iL6.il6, hepcidin.il6) annotation (Line(points={{-29.6,54.4},{-18,
               54.4},{-18,54}}, color={0,0,127}));
@@ -3289,16 +3324,12 @@ organs"),   Text(
               -22,78.6},{-22,49.8},{-18,49.8}}, color={0,0,127}));
       connect(liver.Fe, bmp6.Fe_liv) annotation (Line(points={{-31.8,5},{-28,5},
               {-28,-2},{-88,-2},{-88,78},{-50,78}}, color={0,0,127}));
-      connect(serum.Fe, bmp6.Fe_ser) annotation (Line(points={{10.2,-11.6},{46,
-              -11.6},{46,82},{-60,82},{-60,73.6},{-50,73.6}}, color={0,0,127}));
-      connect(transfusion.y, serum.Transfusion) annotation (Line(points={{
-              -24.25,-54},{-18,-54},{-18,-9.4},{-10.4,-9.4}}, color={0,0,127}));
+      connect(serum.Fe, bmp6.Fe_ser) annotation (Line(points={{10.2,-9.6},{46,
+              -9.6},{46,82},{-60,82},{-60,73.6},{-50,73.6}},  color={0,0,127}));
       connect(transfusion.y, rBC.Transfusion) annotation (Line(points={{-24.25,
-              -54},{52,-54},{52,-9.8},{59.4,-9.8}}, color={0,0,127}));
-      connect(bleeding.y, serum.Bleeding) annotation (Line(points={{-24.25,-70},
-              {-14,-70},{-14,-12.6},{-10.4,-12.6}}, color={0,0,127}));
-      connect(bleeding.y, rBC.Bleeding) annotation (Line(points={{-24.25,-70},{
-              54,-70},{54,-13.6},{59.4,-13.6}}, color={0,0,127}));
+              -64},{52,-64},{52,-9.8},{59.4,-9.8}}, color={0,0,127}));
+      connect(bleeding.y, rBC.Bleeding) annotation (Line(points={{-24.25,-78},{
+              54,-78},{54,-13.6},{59.4,-13.6}}, color={0,0,127}));
       connect(Fe_food.y, duodenum.Food_in) annotation (Line(points={{-82.25,-16},
               {-66.425,-16},{-66.425,-12.4},{-52.6,-12.4}}, color={0,0,127}));
       connect(hepcidin.hep, spleen.hep) annotation (Line(points={{2.6,54},{12,
@@ -3310,6 +3341,8 @@ organs"),   Text(
       connect(hepcidin.hep, otherOrgans.hep) annotation (Line(points={{2.6,54},
               {12,54},{12,30},{-62,30},{-62,-24},{-56,-24},{-56,-37.6},{-10.6,
               -37.6}}, color={0,0,127}));
+      connect(Infusion.y, serum.Infusion) annotation (Line(points={{-26.25,-48},
+              {-22,-48},{-22,-7.4},{-10.4,-7.4}}, color={0,0,127}));
     end Test_Full;
 
     model Tanh
