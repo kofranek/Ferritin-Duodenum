@@ -2446,6 +2446,10 @@ organs"),   Text(
         displayUnit = "ug") = 88.216 * 1e-9 "Threshold value spleen iron export (k44), 57.0/95.0";
       parameter BodylightExtension.Types.MassSpecificRate u = 0.24102 * 1e9 / (60 * 60) "Spleen export rate (k3), 0.21/0.36";
 
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe amount in spleen: total input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe amount in spleen: total output";
       Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
       parameter Bodylight.Types.Frequency k_synth(
@@ -2475,6 +2479,9 @@ organs"),   Text(
       Serum_out = u * min(Fe, Fe_max) * FPN;
 
       der(Fe) = RBC_in + BoneMarrow_in - Serum_out;
+      // total input and output, for the flow chart (added for the simulator, 2026-10-10)
+      Fe_input = RBC_in + BoneMarrow_in;
+      Fe_output = Serum_out;
 
       FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
@@ -2720,6 +2727,10 @@ organs"),   Text(
       Bodylight.Types.MassFlowRate Fe_loss "Fe output from duodenum to intestines (Fe loss), prev:out_2";
       parameter Bodylight.Types.Frequency v_lost = 0.091919 / (60 * 60) "Iron lost rate duodenum (k48), 0.001/0.320";
 
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe amount in duodenum: total input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe amount in duodenum: total output";
       Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
       parameter Bodylight.Types.Frequency k_synth(
@@ -2757,6 +2768,9 @@ organs"),   Text(
           Fe_intake * min(K_absorption / Fe, 1) * malabsorption;
 
       der(Fe) = Serum_in - Serum_out + Fe_absorption - Fe_loss;
+      // total input and output, for the flow chart (added for the simulator, 2026-10-10)
+      Fe_input = Serum_in + Fe_absorption;
+      Fe_output = Serum_out + Fe_loss;
 
       FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
@@ -2871,6 +2885,10 @@ organs"),   Text(
       parameter Real loss_factor = 1 "iron loss factor, 1 = physiologic, >1 enhanced loss";
       parameter Bodylight.Types.Frequency u_lost = 0.0033401 / (60 * 60) "Iron lost rate rest (k9), 0.002/0.004";
 
+      Bodylight.Types.MassFlowRate Fe_input(
+        displayUnit = "ug.h-1") "Fe amount in other organs: total input";
+      Bodylight.Types.MassFlowRate Fe_output(
+        displayUnit = "ug.h-1") "Fe amount in other organs: total output";
       Bodylight.Types.MassFlowRate FPN_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_degradation "FPN degradation";
       parameter Bodylight.Types.Frequency k_synth(
@@ -2901,6 +2919,9 @@ organs"),   Text(
       Fe_loss = u_lost * min(Fe, Fe_max) * loss_factor;
 
       der(Fe) = Serum_in - Serum_out - Fe_loss;
+      // total input and output, for the flow chart (added for the simulator, 2026-10-10)
+      Fe_input = Serum_in;
+      Fe_output = Serum_out + Fe_loss;
 
       FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
