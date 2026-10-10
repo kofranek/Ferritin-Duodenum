@@ -2578,9 +2578,19 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Bodylight.Types.Frequency v_res(
         displayUnit="h-1") = 6.3206 / (60 * 60) "Other organs uptake rate (k34), 5.4/10.0";
 
+      //auto/manual regulation
+
+      parameter Real Fe_regulation = 1 "Fe regulation: 1 - auto, 0 - manual";
+      parameter Bodylight.Types.Mass Fe_manual(
+        displayUnit = "ug") = 1.51304 * 1e-9;
+      Bodylight.Types.Mass Fe_auto(
+        start = 1.51304 * 1e-9,
+        displayUnit = "ug");
+      Real Fe_regulation_switcher;
+
     initial equation
 
-      der(Fe) = 0; // eq 16.
+      der(Fe_auto) = 0; // eq 16.
 
     equation
 
@@ -2595,7 +2605,10 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Fe_input = Liver_in + Spleen_in + Duodenum_in + OtherOrgans_in + Transfusion;
       Fe_output = Liver_out + BoneMarrow_out + Duodenum_out + OtherOrgans_out + Bleeding;
 
-      der(Fe) = Fe_input - Fe_output;
+      Fe_regulation_switcher = smooth(1, noEvent(if Fe_regulation > 0.5 then 1.0 else 0));
+
+      der(Fe_auto) = Fe_regulation_switcher * (Fe_input - Fe_output);
+      Fe = Fe_regulation_switcher * Fe_auto + (1 - Fe_regulation_switcher) * Fe_manual;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
