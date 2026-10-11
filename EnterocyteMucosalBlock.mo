@@ -2154,15 +2154,15 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Real Fe_regulation = 1 "Fe regulation: 1 - auto, 0 - manual";
       parameter Bodylight.Types.Mass Fe_manual(
         displayUnit = "ug") = 1.51304 * 1e-9;
-      Bodylight.Types.Mass Fe_auto(
-        start = 1.51304 * 1e-9,
-        displayUnit = "ug");
       Real Fe_regulation_switcher;
+      parameter Bodylight.Types.Time tau_manual = 10 * 60 "How fast serum iron reaches the hand-set level in manual mode";
 
 
 
     initial equation
 
+      // The steady state in either mode: with the model's regulation the balance of flows, by hand
+      // the hand-set level (see der(Fe) below).
       der(Fe) = 0; // eq 16.
 
     equation
@@ -2183,8 +2183,12 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Fe_regulation_switcher = smooth(1, noEvent(if Fe_regulation > 0.5 then 1.0 else 0));
 
-      der(Fe_auto) = Fe_regulation_switcher * (Fe_input - Fe_output);
-      Fe = Fe_regulation_switcher * Fe_auto + (1 - Fe_regulation_switcher) * Fe_manual;
+      // By hand, serum iron goes to the hand-set level within minutes (tau_manual) and stays there
+      // whatever flows in and out: a clamp. Switching back to the model's regulation goes on from the
+      // clamped level. Fe itself is the state -- the earlier blend Fe = sw*Fe_auto + (1-sw)*Fe_manual
+      // made the initialization divide by sw, 0 by hand, and the FMU would not start (2026-10-11).
+      der(Fe) = Fe_regulation_switcher * (Fe_input - Fe_output)
+        + (1 - Fe_regulation_switcher) * (Fe_manual - Fe) / tau_manual;
 
 
       //new
@@ -2301,9 +2305,10 @@ organs"),   Text(
         annotation (Placement(transformation(extent={{96,76},{116,96}}),
             iconTransformation(extent={{96,-30},{116,-10}})));
 
-      Bodylight.Types.Mass Fe(
+      Bodylight.Types.RealIO.MassOutput Fe(
         start = 63.1596 * 1e-9,
-        displayUnit = "ug") "Fe ammount in bones (s3)";
+        displayUnit = "ug") "Fe ammount in bones (s3)" annotation (Placement(transformation(extent={{94,-90},{114,-70}}),
+            iconTransformation(extent={{94,-90},{114,-70}})));
       Bodylight.Types.MassFlowRate Fe_input(
         displayUnit = "ug.h-1") "Fe ammount in bones: input";
       Bodylight.Types.MassFlowRate Fe_output(
@@ -3035,6 +3040,17 @@ organs"),   Text(
       Bodylight.Types.RealIO.MassInput Bmp6 annotation (Placement(transformation(
               extent={{-120,60},{-80,100}}), iconTransformation(extent={{-120,18},{-80,
                 58}})));
+      Modelica.Blocks.Interfaces.RealInput ERFE "Erythroferrone, relative: 1 = normal" annotation (Placement(transformation(
+              extent={{-120,-40},{-80,0}}), iconTransformation(extent={{-120,-40},{-80,0}})));
+
+      // Erythroferrone (added 2026-10-11): made by erythroblasts as erythropoietin drives them, it
+      // binds BMP6, and the hepcidin promoter sees only the free share. 1 at the normal state; three
+      // times the normal erythroferrone leaves 38 % of BMP6 free, none of it 125 %. The IL-6 path
+      // is untouched. ERFE_regulation = 0 switches it off (Enculescu).
+      parameter Real ERFE_regulation = 1 "Erythroferrone lowers hepcidin: 1 - yes, 0 - no";
+      parameter Real K_ERFE = 2 "Erythroferrone (1 = normal) at which half of BMP6 is bound";
+      parameter Real h_ERFE = 2 "Steepness of the binding";
+      Real Bmp6_free_share "Share of BMP6 not bound by erythroferrone, 1 = normal";
       Bodylight.Types.RealIO.MassOutput hep(
         start = 0.664938 * 1e-9,
         displayUnit = "ug") "Hepcidin amount (s16)" annotation (Placement(transformation(
@@ -3054,25 +3070,31 @@ organs"),   Text(
       parameter Real hep_regulation = 1 "Hepcidin regulation: 1 - auto, 0 - manual";
       parameter Bodylight.Types.Mass hep_manual(
         displayUnit = "ug") = 0.664938 * 1e-9;
-      Bodylight.Types.Mass hep_auto(
-        start = 0.664938 * 1e-9,
-        displayUnit = "ug");
       Real hep_regulation_switcher;
+      parameter Bodylight.Types.Time tau_manual = 60 * 60 "How fast hepcidin reaches the hand-set level in manual mode";
 
     initial equation
 
-      der(hep_auto) = 0; // eq. 1
+      // The steady state in either mode: production against degradation with the model's regulation,
+      // the hand-set level by hand (see der(hep) below).
+      der(hep) = 0; // eq. 1
 
     equation
 
-      hep_in = algorithms.Promoter(il6 * K_mass, Bmp6 * K_mass) / K_mass * K_freq * knockout;
+      Bmp6_free_share = (1 - ERFE_regulation)
+        + ERFE_regulation * (1 + (1 / K_ERFE) ^ h_ERFE) / (1 + (noEvent(max(ERFE, 0)) / K_ERFE) ^ h_ERFE);
+      hep_in = algorithms.Promoter(il6 * K_mass, Bmp6 * Bmp6_free_share * K_mass) / K_mass * K_freq * knockout;
 
       hep_out = k_deg * hep;
 
       hep_regulation_switcher = smooth(1, noEvent(if hep_regulation > 0.5 then 1.0 else 0));
 
-      der(hep_auto) = hep_regulation_switcher * (hep_in - hep_out); // eq. 1
-      hep = hep_regulation_switcher * hep_auto + (1 - hep_regulation_switcher) * hep_manual;
+      // By hand, hepcidin goes to the hand-set level within the hour (tau_manual); switching back to
+      // the model's regulation goes on from there. hep itself is the state: the blend
+      // hep = sw*hep_auto + (1-sw)*hep_manual made the initialization divide by sw, 0 by hand, and the
+      // FMU refused to start a run with hepcidin set by hand (fmi2Initialize = 3, 2026-10-11).
+      der(hep) = hep_regulation_switcher * (hep_in - hep_out)
+        + (1 - hep_regulation_switcher) * (hep_manual - hep) / tau_manual; // eq. 1
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
@@ -3108,7 +3130,9 @@ organs"),   Text(
       Bodylight.Types.Constants.MassConst Bmp6(k(displayUnit="ug") =
           1.5829111e-08)
         annotation (Placement(transformation(extent={{-94,16},{-86,24}})));
+      Modelica.Blocks.Sources.Constant ERFE_normal(k=1) "erythroferrone at its normal level";
     equation
+      connect(ERFE_normal.y, hepcidin.ERFE);
       connect(il6.y, hepcidin.il6) annotation (Line(points={{-85,38},{-54,38},{
               -54,32},{-40,32}}, color={0,0,127}));
       connect(Bmp6.y, hepcidin.Bmp6) annotation (Line(points={{-85,20},{-54,20},
@@ -3230,6 +3254,34 @@ organs"),   Text(
               textString="EPO")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
     end Erythropoietin;
 
+    model Erythroferrone "Erythroferrone: made by erythroblasts as erythropoietin drives them; lowers hepcidin"
+      Modelica.Blocks.Interfaces.RealInput EPO "Erythropoietin, relative: 1 = normal" annotation (
+          Placement(transformation(extent={{-120,20},{-80,60}}), iconTransformation(extent={{-120,20},{-80,60}})));
+      Bodylight.Types.RealIO.MassInput Fe_bm "Fe amount in bone marrow (erythroblasts)" annotation (
+          Placement(transformation(extent={{-120,-60},{-80,-20}}), iconTransformation(extent={{-120,-60},{-80,-20}})));
+      Modelica.Blocks.Interfaces.RealOutput ERFE(start = 1) "Erythroferrone, relative: 1 = normal" annotation (
+          Placement(transformation(extent={{100,-10},{120,10}}), iconTransformation(extent={{100,-10},{120,10}})));
+      parameter Bodylight.Types.Mass Fe_bm_normal(
+        displayUnit = "ug") = 63.159604 * 1e-9 "Normal (steady-state) bone-marrow iron";
+      parameter Bodylight.Types.Time tau = 4 * 60 * 60 "Time constant of erythroferrone (4 h)";
+    initial equation
+      der(ERFE) = 0;
+    equation
+      // As many erythroblasts as there is iron in the marrow, each making erythroferrone as hard as
+      // erythropoietin drives it.
+      der(ERFE) = (EPO * Fe_bm / Fe_bm_normal - ERFE) / tau;
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-80,40},{80,-40}},
+              textColor={28,108,200},
+              textString="ERFE")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end Erythroferrone;
+
     model Bmp6
       Bodylight.Types.RealIO.MassOutput Bmp6(
         start = 15.8291 * 1e-9,
@@ -3323,6 +3375,8 @@ organs"),   Text(
       IL6 iL6 annotation (Placement(transformation(extent={{-50,36},{-30,56}})));
       Erythropoietin erythropoietin
         annotation (Placement(transformation(extent={{42,-60},{62,-40}})));
+      Erythroferrone erythroferrone
+        annotation (Placement(transformation(extent={{42,-86},{62,-66}})));
       Bmp6 bmp6
         annotation (Placement(transformation(extent={{-50,60},{-30,80}})));
       Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
@@ -3403,6 +3457,12 @@ organs"),   Text(
               {-22,-48},{-22,-7.4},{-10.4,-7.4}}, color={0,0,127}));
       connect(rBC.Fe, erythropoietin.Fe_RBC) annotation (Line(points={{80.4,-14},{
               88,-14},{88,-50},{62,-50}}, color={0,0,127}));
+      connect(erythropoietin.EPO, erythroferrone.EPO) annotation (Line(points={{62.6,-50},{
+              66,-50},{66,-60},{36,-60},{36,-72},{42,-72}}, color={0,0,127}));
+      connect(boneMarrow.Fe, erythroferrone.Fe_bm) annotation (Line(points={{46.4,-38},{
+              50,-38},{50,-56},{34,-56},{34,-80},{42,-80}}, color={0,0,127}));
+      connect(erythroferrone.ERFE, hepcidin.ERFE) annotation (Line(points={{63,-76},{
+              70,-76},{70,30},{-24,30},{-24,44},{-18,44}}, color={0,0,127}));
       connect(erythropoietin.EPO, serum.EPO) annotation (Line(points={{40.6,-50},{
               -16,-50},{-16,-12.4},{-10.4,-12.4}}, color={0,0,127}));
     end Test_Full;
