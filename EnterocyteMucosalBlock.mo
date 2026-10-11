@@ -1297,7 +1297,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       parameter Integer rN = 50;
       parameter Integer rO = 2;
 
-      Bodylight.Types.RealIO.ConcentrationInput Fe_total_set;
+      Bodylight.Types.Concentration Fe_total_set "Fe_total_norm * Fe_total_fract (computed, not an input)";
 
       // Added variables
 
@@ -1432,7 +1432,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.Constants.FractionConst fraction(k=1)
         annotation (Placement(transformation(extent={{-92,-6},{-84,2}})));
     equation
-      connect(Fe_total_norm.y, ferritinCageBlockShortModel_withOutputs.Fe_total_set)
+      connect(Fe_total_norm.y, ferritinCageBlockShortModel_withOutputs.Fe_total_norm)
         annotation (Line(points={{-83,28},{-64.5,28},{-64.5,28.76},{-46,28.76}},
             color={0,0,127}));
       connect(fraction.y, ferritinCageBlockShortModel_withOutputs.Fe_total_fract)
@@ -2100,6 +2100,9 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.RealIO.MassFlowRateInput Infusion "Fe infusion rate"
         annotation (Placement(transformation(extent={{-132,50},{-92,90}}),
             iconTransformation(extent={{-118,-68},{-90,-40}})));
+      Modelica.Blocks.Interfaces.RealInput EPO "Erythropoietin, relative: 1 = normal"
+        annotation (Placement(transformation(extent={{-132,-110},{-92,-70}}),
+            iconTransformation(extent={{-118,-98},{-90,-70}})));
 
 
       Bodylight.Types.RealIO.MassFlowRateOutput Liver_out "Fe output to liver" annotation (
@@ -2130,6 +2133,17 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
         displayUnit="h-1") = 14.3810 / (60 * 60) "High liver iron uptake (k45)"; //!!! Inconsistecy xml model vs. paper !!!, xml model value adopted;
       parameter Bodylight.Types.Frequency v_bm(
         displayUnit="h-1") = 2.8256 / (60 * 60) "Bone marrow uptake rate (k5), 2.66/4.16";
+
+      // Erythropoietin (added 2026-10-11): the marrow takes the iron erythropoiesis needs, not all it
+      // is offered. Its uptake saturates with serum iron (the transferrin receptors of the erythroid
+      // precursors are finite) and their number follows erythropoietin. At the normal state both
+      // factors are 1, so the steady state is Enculescu's. EPO_regulation = 0 gives back the linear
+      // uptake v_bm * Fe, with which a knocked-out hepcidin gene sent the extra iron into red cells
+      // (x2.5 in 60 days) instead of the liver.
+      parameter Real EPO_regulation = 1 "Erythropoiesis regulated by erythropoietin: 1 - yes, 0 - no (Enculescu)";
+      parameter Real K_bm = 0.5 "Half-saturation of the marrow's iron uptake, in units of the normal serum iron";
+      parameter Bodylight.Types.Mass Fe_normal(
+        displayUnit = "ug") = 1.5130432 * 1e-9 "Normal (steady-state) serum iron";
       parameter Bodylight.Types.Frequency v_duo(
         displayUnit="h-1") = 0.70485 / (60 * 60) "Duodenal uptake rate from blood (k6), 0.6/1.3";
       parameter Bodylight.Types.Frequency v_res(
@@ -2155,7 +2169,8 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
 
       Liver_out = v_liv_1 * min(Fe, th) + v_liv_2 * max(Fe - th, 0);
 
-      BoneMarrow_out = v_bm * Fe;
+      BoneMarrow_out = (1 - EPO_regulation) * v_bm * Fe
+        + EPO_regulation * v_bm * Fe_normal * (1 + K_bm) * EPO * (Fe / Fe_normal) / (K_bm + Fe / Fe_normal);
 
       Duodenum_out = v_duo * Fe;
 
@@ -2257,6 +2272,7 @@ organs"),   Text(
       Bodylight.Types.Constants.MassFlowRateConst bleeding(k(displayUnit=
               "ug.h-1") = 0)
         annotation (Placement(transformation(extent={{-96,-34},{-82,-22}})));
+      Modelica.Blocks.Sources.Constant EPO_normal(k=1) "erythropoietin at its normal level";
     equation
       connect(Fe_spleen.y, serum.Spleen_in) annotation (Line(points={{-80.25,42},
               {-46,42},{-46,27.24},{-35.86,27.24}}, color={0,0,127}));
@@ -2266,10 +2282,9 @@ organs"),   Text(
               {-80.25,8},{-44,8},{-44,9.84},{-35.86,9.84}}, color={0,0,127}));
       connect(Fe_liver.y, serum.Liver_in) annotation (Line(points={{-80.25,60},
               {-44,60},{-44,35.94},{-35.86,35.94}}, color={0,0,127}));
-      connect(transfusion.y, serum.Transfusion) annotation (Line(points={{
+      connect(transfusion.y, serum.Infusion) annotation (Line(points={{
               -80.25,-10},{-46,-10},{-46,-4.66},{-35.24,-4.66}}, color={0,0,127}));
-      connect(bleeding.y, serum.Bleeding) annotation (Line(points={{-80.25,-28},
-              {-44,-28},{-44,-13.94},{-35.24,-13.94}}, color={0,0,127}));
+      connect(EPO_normal.y, serum.EPO);
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
     end Test_Serum;
@@ -2363,9 +2378,10 @@ organs"),   Text(
       Bodylight.Types.RealIO.MassFlowRateOutput Spleen_out "Fe output to spleen" annotation (Placement(transformation(extent={{96,76},{116,96}}),
             iconTransformation(extent={{94,-10},{114,10}})));
 
-      Bodylight.Types.Mass Fe(
-        start = 63.1596 * 1e-9,
-        displayUnit = "ug") "Fe ammount in bones (s3)";
+      Bodylight.Types.RealIO.MassOutput Fe(
+        start = 1016.7233 * 1e-9,
+        displayUnit = "ug") "Fe amount in red blood cells (s6)" annotation (Placement(transformation(extent={{94,-90},{114,-70}}),
+            iconTransformation(extent={{94,-90},{114,-70}})));
       Bodylight.Types.MassFlowRate Fe_input(
         displayUnit = "ug.h-1") "Fe ammount in bones: input";
       Bodylight.Types.MassFlowRate Fe_output(
@@ -3102,22 +3118,33 @@ organs"),   Text(
     model IL6 "IL-6"
       Bodylight.Types.RealIO.MassOutput il6(
         start = 0*1e-9,
+        fixed = true,
+        nominal = 1e-6,
         displayUnit = "ug") "IL-6 amount (s22)"
                             annotation (Placement(transformation(
               extent={{94,74},{114,94}}), iconTransformation(extent={{94,74},{114,94}})));
 
+      // nominal: what matters is LPS against K_mRNA (2.6e-15 kg), six orders below a dose. With the
+      // default nominal of a Mass (1e-3 kg) the solver's absolute error is ~1e-11 kg, and LPS below
+      // that -- the two hours in which it switches IL-6 mRNA production off -- was not computed.
       Bodylight.Types.Mass LPS(
+        start = 0,
+        fixed = true,
+        nominal = 1e-15,
         displayUnit = "ug") "LPS (Lipopolysaccharide) ammount (s23)";
       parameter Bodylight.Types.Mass LPS_given(
         displayUnit = "ug") = 0 "LPS given so far, all doses together (the application adds 1 ug per press)";
-      Bodylight.Types.Mass LPS_degraded(
+      discrete Bodylight.Types.Mass LPS_applied(
         start = 0,
         fixed = true,
-        displayUnit = "ug") "LPS degraded so far";
+        displayUnit = "ug") "LPS doses already added to LPS";
+      parameter Real LPS_check(unit = "s") = 60 "How often a new dose (a rise of LPS_given) is looked for";
       parameter Bodylight.Types.Frequency k_deg_LPS = 5.8560 / (60 * 60) "LPS degradation rate, 5.9/5.9";
 
       Bodylight.Types.Mass il6mRNA(
         start = 0 * 1e-9,
+        fixed = true,
+        nominal = 1e-9,
         displayUnit = "ug") "IL-6 mRNA ammount (s21)";
 
       Bodylight.Types.MassFlowRate il6mRNA_in "Production of IL-6 mRNA";
@@ -3131,17 +3158,22 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_deg = 4.4465 / (60 * 60) "Il6 degradation rate, 4.45/4.45";
       parameter BodylightExtension.Types.ReverseMass K_mass = 1e9;
 
-    initial equation
-
-      der(il6mRNA) = 0; // eq 4.
-      der(il6) = 0; // eq 5.
+    // No initial equations: without LPS the steady state of IL-6 and its mRNA is exactly zero, so
+    // both start at zero (fixed), as in Enculescu's SBML (s21 = s22 = 0, s23 = 1). With
+    // der(...) = 0 here, a dose at time 0 (LPS_given > 0) asked for the steady state of a lasting
+    // inflammation instead, and the initialization failed.
 
     equation
 
-      // A dose is a step of LPS_given: LPS jumps at once, with no event, and what is left of it is what
-      // has not yet been degraded.
-      LPS = LPS_given - LPS_degraded;
-      der(LPS_degraded) = k_deg_LPS * LPS;
+      der(LPS) = -k_deg_LPS * LPS;
+
+      // A dose: LPS_given rises (the application adds 1 ug per press), and at the next check LPS
+      // grows by what is new. LPS stays a state, as in Enculescu; LPS = LPS_given - LPS_degraded
+      // was the difference of two numbers near 1e-9 kg, and lost LPS where it matters.
+      when sample(0, LPS_check) then
+        LPS_applied = LPS_given;
+        reinit(LPS, LPS + (LPS_given - pre(LPS_applied)));
+      end when;
 
       il6mRNA_in = LPS / (LPS + K_mRNA) * 1e-9 / (60 * 60);
       il6mRNA_out = k_deg_mRNA * il6mRNA;
@@ -3173,6 +3205,30 @@ organs"),   Text(
       extends Modelica.Icons.Example;
       IL6 iL6 annotation (Placement(transformation(extent={{-40,-40},{40,40}})));
     end Test_il6;
+
+    model Erythropoietin "Erythropoietin: rises as red-cell iron (haemoglobin) falls"
+      Bodylight.Types.RealIO.MassInput Fe_RBC "Fe amount in red blood cells" annotation (
+          Placement(transformation(extent={{-120,-20},{-80,20}}), iconTransformation(extent={{-120,-20},{-80,20}})));
+      Modelica.Blocks.Interfaces.RealOutput EPO "Erythropoietin, relative: 1 = normal" annotation (
+          Placement(transformation(extent={{100,-10},{120,10}}), iconTransformation(extent={{100,-10},{120,10}})));
+      parameter Bodylight.Types.Mass Fe_RBC_normal(
+        displayUnit = "ug") = 1016.7233 * 1e-9 "Normal (steady-state) red-cell iron";
+      parameter Real n = 4 "Steepness: EPO = (Fe_RBC_normal / Fe_RBC)^n";
+    equation
+      // The kidney answers a falling haemoglobin (red-cell iron here) with more erythropoietin, and a
+      // rising one with less: 10 % fewer red cells, EPO x1.5; 10 % more, x0.68. The floor keeps it finite.
+      EPO = (Fe_RBC_normal / noEvent(max(Fe_RBC, 1e-3 * Fe_RBC_normal))) ^ n;
+      annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
+              Rectangle(
+              extent={{-100,100},{100,-100}},
+              lineColor={28,108,200},
+              fillColor={255,255,0},
+              fillPattern=FillPattern.Solid),
+            Text(
+              extent={{-80,40},{80,-40}},
+              textColor={28,108,200},
+              textString="EPO")}), Diagram(coordinateSystem(preserveAspectRatio=false)));
+    end Erythropoietin;
 
     model Bmp6
       Bodylight.Types.RealIO.MassOutput Bmp6(
@@ -3265,6 +3321,8 @@ organs"),   Text(
       Hepcidin hepcidin
         annotation (Placement(transformation(extent={{-18,36},{2,56}})));
       IL6 iL6 annotation (Placement(transformation(extent={{-50,36},{-30,56}})));
+      Erythropoietin erythropoietin
+        annotation (Placement(transformation(extent={{42,-60},{62,-40}})));
       Bmp6 bmp6
         annotation (Placement(transformation(extent={{-50,60},{-30,80}})));
       Bodylight.Types.Constants.MassFlowRateConst transfusion(k(displayUnit=
@@ -3343,6 +3401,10 @@ organs"),   Text(
               -37.6}}, color={0,0,127}));
       connect(Infusion.y, serum.Infusion) annotation (Line(points={{-26.25,-48},
               {-22,-48},{-22,-7.4},{-10.4,-7.4}}, color={0,0,127}));
+      connect(rBC.Fe, erythropoietin.Fe_RBC) annotation (Line(points={{80.4,-14},{
+              88,-14},{88,-50},{62,-50}}, color={0,0,127}));
+      connect(erythropoietin.EPO, serum.EPO) annotation (Line(points={{40.6,-50},{
+              -16,-50},{-16,-12.4},{-10.4,-12.4}}, color={0,0,127}));
     end Test_Full;
 
     model Tanh
