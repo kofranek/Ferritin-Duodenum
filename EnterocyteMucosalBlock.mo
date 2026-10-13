@@ -2788,7 +2788,7 @@ organs"),   Text(
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
       Bodylight.Types.MassFlowRate FPN_mRNA_degradation "FPN degradation";
       parameter Bodylight.Types.MassFlowRate K_mRNA =  1 / (60 * 60) * 1e-9;
-      parameter Real K1_mRNA = 30.66;
+      parameter Real K1_mRNA = 30.66 * 0.020001 "Constant Fpn_duo_mRNA production (k35*K_liv_1, k35 = 0.020001), 0.56/0.79";
       parameter Bodylight.Types.Mass K2_mRNA(
         displayUnit = "ug") = 0.0012836 * 1e-9 "Constant FpnmRNA production (k41), 3.0e-4/2.0e-3";
       parameter Bodylight.Types.Frequency k_mRNA_deg(
