@@ -2103,9 +2103,6 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Modelica.Blocks.Interfaces.RealInput TfR_liver "Transferrin receptors in the liver, relative: 1 = normal"
         annotation (Placement(transformation(extent={{-10,-10},{10,10}}, rotation=270, origin={-60,110}),
             iconTransformation(extent={{-10,-10},{10,10}}, rotation=270, origin={-60,110})));
-      Modelica.Blocks.Interfaces.RealInput TfR_duodenum "Transferrin receptors in the duodenum, relative: 1 = normal"
-        annotation (Placement(transformation(extent={{-10,-10},{10,10}}, rotation=270, origin={0,110}),
-            iconTransformation(extent={{-10,-10},{10,10}}, rotation=270, origin={0,110})));
       Modelica.Blocks.Interfaces.RealInput TfR_otherOrgans "Transferrin receptors in the other organs, relative: 1 = normal"
         annotation (Placement(transformation(extent={{-10,-10},{10,10}}, rotation=270, origin={60,110}),
             iconTransformation(extent={{-10,-10},{10,10}}, rotation=270, origin={60,110})));
@@ -2183,7 +2180,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       BoneMarrow_out = (1 - EPO_regulation) * v_bm * Fe
         + EPO_regulation * v_bm * Fe_normal * (1 + K_bm) * EPO * (Fe / Fe_normal) / (K_bm + Fe / Fe_normal);
 
-      Duodenum_out = v_duo * TfR_duodenum * Fe;
+      Duodenum_out = v_duo * Fe;
 
       OtherOrgans_out = v_res * TfR_otherOrgans * Fe;
 
@@ -2302,7 +2299,6 @@ organs"),   Text(
               -80.25,-10},{-46,-10},{-46,-4.66},{-35.24,-4.66}}, color={0,0,127}));
       connect(EPO_normal.y, serum.EPO);
       connect(TfR_normal.y, serum.TfR_liver);
-      connect(TfR_normal.y, serum.TfR_duodenum);
       connect(TfR_normal.y, serum.TfR_otherOrgans);
       annotation (Icon(coordinateSystem(preserveAspectRatio=false)), Diagram(
             coordinateSystem(preserveAspectRatio=false)));
@@ -2667,9 +2663,10 @@ organs"),   Text(
       parameter Real TfR_max = 2 "Upper limit of TfR1, relative; only the rise above 1 saturates towards it";
       parameter Bodylight.Types.Mass Fe_start(fixed = false, displayUnit = "ug") "Iron at the start (steady state), where TfR1 = 1";
       Real TfR_target "TfR1 the cell's iron asks for (IRP/IRE): the inverse of ferroportin's (1 + k_Fe*Fe), 1 = normal";
+      Real TfR_cell(start = 1) "TfR1 the cell has, relative; with TfR_regulation = 0 it is kept but does not act";
     initial equation
       Fe_start = Fe;
-      der(TfR) = 0;
+      der(TfR_cell) = 0;
 
       der(Fe) = 0;
       der(FPN) = 0;
@@ -2691,9 +2688,11 @@ organs"),   Text(
       // Transferrin receptors: the same IRP/IRE sensor as ferroportin, the opposite sign.
       // The rise above normal saturates towards TfR_max; the fall is not limited.
       TfR_target = (1 + k_Fe * Fe_start) / (1 + k_Fe * Fe);
-      der(TfR) = ((1 - TfR_regulation)
-        + TfR_regulation * noEvent(if TfR_target <= 1 then TfR_target
-          else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR) / tau_TfR;
+      der(TfR_cell) = (noEvent(if TfR_target <= 1 then TfR_target
+          else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR_cell) / tau_TfR;
+      // The switch acts at once, like EPO_regulation and ERFE_regulation: off, uptake is the original
+      // (TfR = 1); on again, the receptors the cell has meanwhile acquired act.
+      TfR = 1 + TfR_regulation * (TfR_cell - 1);
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
 
@@ -2824,15 +2823,7 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_mRNA_deg(
         displayUnit = "h-1") = 1.0841 / (60 * 60) "FpnmRNA degradation rate (k25), 1.02/1.20";
 
-      Modelica.Blocks.Interfaces.RealOutput TfR(start = 1) "Transferrin receptors (TfR1), relative: 1 = normal" annotation (
-          Placement(transformation(extent={{100,-40},{120,-20}}), iconTransformation(extent={{100,-40},{120,-20}})));
-      parameter Real TfR_regulation = 1 "Uptake from transferrin follows TfR1: 1 - yes, 0 - no (Enculescu)";
-      parameter Bodylight.Types.Time tau_TfR = 12 * 60 * 60 "Time constant of TfR1";
-      parameter Real TfR_max = 2 "Upper limit of TfR1, relative; only the rise above 1 saturates towards it";
-      parameter Bodylight.Types.Mass Fe_start(displayUnit = "ug") = 2.97118 * 1e-9 "Iron at the start, where TfR1 = 1 (the duodenum starts from its start values, not from initial equations)";
-      Real TfR_target "TfR1 the cell's iron asks for (IRP/IRE): the inverse of ferroportin's (1 + k_Fe*Fe), 1 = normal";
     initial equation
-      der(TfR) = 0;
 
     //   der(Fe) = 0;
     //   der(FPN) = 0;
@@ -2863,12 +2854,6 @@ organs"),   Text(
 
       FPN_mRNA_synthesis = K_mRNA / (1 + (K1_mRNA * il6 / (K2_mRNA + il6)));
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
-      // Transferrin receptors: the same IRP/IRE sensor as ferroportin, the opposite sign.
-      // The rise above normal saturates towards TfR_max; the fall is not limited.
-      TfR_target = (1 + k_Fe * Fe_start) / (1 + k_Fe * Fe);
-      der(TfR) = ((1 - TfR_regulation)
-        + TfR_regulation * noEvent(if TfR_target <= 1 then TfR_target
-          else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR) / tau_TfR;
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
 
@@ -3004,9 +2989,10 @@ organs"),   Text(
       parameter Real TfR_max = 2 "Upper limit of TfR1, relative; only the rise above 1 saturates towards it";
       parameter Bodylight.Types.Mass Fe_start(fixed = false, displayUnit = "ug") "Iron at the start (steady state), where TfR1 = 1";
       Real TfR_target "TfR1 the cell's iron asks for (IRP/IRE): the inverse of ferroportin's (1 + k_Fe*Fe), 1 = normal";
+      Real TfR_cell(start = 1) "TfR1 the cell has, relative; with TfR_regulation = 0 it is kept but does not act";
     initial equation
       Fe_start = Fe;
-      der(TfR) = 0;
+      der(TfR_cell) = 0;
 
       der(Fe) = 0;
       der(FPN) = 0;
@@ -3032,9 +3018,11 @@ organs"),   Text(
       // Transferrin receptors: the same IRP/IRE sensor as ferroportin, the opposite sign.
       // The rise above normal saturates towards TfR_max; the fall is not limited.
       TfR_target = (1 + k_Fe * Fe_start) / (1 + k_Fe * Fe);
-      der(TfR) = ((1 - TfR_regulation)
-        + TfR_regulation * noEvent(if TfR_target <= 1 then TfR_target
-          else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR) / tau_TfR;
+      der(TfR_cell) = (noEvent(if TfR_target <= 1 then TfR_target
+          else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR_cell) / tau_TfR;
+      // The switch acts at once, like EPO_regulation and ERFE_regulation: off, uptake is the original
+      // (TfR = 1); on again, the receptors the cell has meanwhile acquired act.
+      TfR = 1 + TfR_regulation * (TfR_cell - 1);
 
       der(FPN_mRNA) = FPN_mRNA_synthesis - FPN_mRNA_degradation;
 
@@ -3416,14 +3404,14 @@ organs"),   Text(
 
     model Test_Full
       extends Modelica.Icons.Example;
-      parameter Real TfR_regulation = 1 "Uptake from transferrin follows TfR1 in liver, duodenum and other organs: 1 - yes, 0 - no (Enculescu)";
+      parameter Real TfR_regulation = 1 "Uptake from transferrin follows TfR1 in liver and other organs: 1 - yes, 0 - no (Enculescu)";
       Serum serum
         annotation (Placement(transformation(extent={{-10,-12},{10,8}})));
       Liver liver(TfR_regulation = TfR_regulation)
         annotation (Placement(transformation(extent={{-52,2},{-32,22}})));
       Spleen spleen
         annotation (Placement(transformation(extent={{22,16},{42,36}})));
-      Duodenum duodenum(TfR_regulation = TfR_regulation)
+      Duodenum duodenum
         annotation (Placement(transformation(extent={{-52,-28},{-32,-8}})));
       OtherOrgans otherOrgans(TfR_regulation = TfR_regulation)
         annotation (Placement(transformation(extent={{-10,-42},{10,-22}})));
@@ -3525,8 +3513,6 @@ organs"),   Text(
               70,-76},{70,30},{-24,30},{-24,44},{-18,44}}, color={0,0,127}));
       connect(liver.TfR, serum.TfR_liver) annotation (Line(points={{-31,9},{-28,
               9},{-28,14},{-6,14},{-6,9}},                                                                   color={0,0,127}));
-      connect(duodenum.TfR, serum.TfR_duodenum) annotation (Line(points={{-31,-21},
-              {-24,-21},{-24,16},{0,16},{0,9}},                                                                      color={0,0,127}));
       connect(otherOrgans.TfR, serum.TfR_otherOrgans) annotation (Line(points={{11,-35},
               {16,-35},{16,20},{6,20},{6,9}},                                                                           color={0,0,127}));
       connect(erythropoietin.EPO, serum.EPO) annotation (Line(points={{63,-50},
