@@ -3416,15 +3416,16 @@ organs"),   Text(
 
     model Test_Full
       extends Modelica.Icons.Example;
+      parameter Real TfR_regulation = 1 "Uptake from transferrin follows TfR1 in liver, duodenum and other organs: 1 - yes, 0 - no (Enculescu)";
       Serum serum
         annotation (Placement(transformation(extent={{-10,-12},{10,8}})));
-      Liver liver
+      Liver liver(TfR_regulation = TfR_regulation)
         annotation (Placement(transformation(extent={{-52,2},{-32,22}})));
       Spleen spleen
         annotation (Placement(transformation(extent={{22,16},{42,36}})));
-      Duodenum duodenum
+      Duodenum duodenum(TfR_regulation = TfR_regulation)
         annotation (Placement(transformation(extent={{-52,-28},{-32,-8}})));
-      OtherOrgans otherOrgans
+      OtherOrgans otherOrgans(TfR_regulation = TfR_regulation)
         annotation (Placement(transformation(extent={{-10,-42},{10,-22}})));
       BoneMarrow boneMarrow
         annotation (Placement(transformation(extent={{26,-40},{46,-20}})));
@@ -3457,7 +3458,7 @@ organs"),   Text(
       connect(duodenum.Serum_out, serum.Duodenum_in) annotation (Line(points={{-31.2,
               -9.2},{-26,-9.2},{-26,0.6},{-10.6,0.6}},         color={0,0,127}));
       connect(otherOrgans.Serum_out, serum.OtherOrgans_in) annotation (Line(
-            points={{10.8,-23.2},{16,-23.2},{16,-16},{-20,-16},{-20,-2.4},{
+            points={{10.8,-23.2},{12,-23.2},{12,-16},{-20,-16},{-20,-2.4},{
               -10.6,-2.4}}, color={0,0,127}));
       connect(serum.BoneMarrow_out, boneMarrow.Serum_in) annotation (Line(
             points={{10.6,4},{20,4},{20,-30},{25.4,-30}}, color={0,0,127}));
@@ -3504,7 +3505,7 @@ organs"),   Text(
       connect(Fe_food.y, duodenum.Food_in) annotation (Line(points={{-82.25,-16},
               {-66.425,-16},{-66.425,-12.4},{-52.6,-12.4}}, color={0,0,127}));
       connect(hepcidin.hep, spleen.hep) annotation (Line(points={{2.6,54},{12,
-              54},{12,30},{16,30},{16,20.4},{21.4,20.4}}, color={0,0,127}));
+              54},{12,30},{18,30},{18,20.4},{21.4,20.4}}, color={0,0,127}));
       connect(hepcidin.hep, liver.hep) annotation (Line(points={{2.6,54},{12,54},
               {12,30},{-62,30},{-62,6.4},{-52.6,6.4}}, color={0,0,127}));
       connect(hepcidin.hep, duodenum.hep) annotation (Line(points={{2.6,54},{12,
@@ -3522,9 +3523,12 @@ organs"),   Text(
               50,-38},{50,-56},{34,-56},{34,-80},{42,-80}}, color={0,0,127}));
       connect(erythroferrone.ERFE, hepcidin.ERFE) annotation (Line(points={{63,-76},{
               70,-76},{70,30},{-24,30},{-24,44},{-18,44}}, color={0,0,127}));
-      connect(liver.TfR, serum.TfR_liver) annotation (Line(points={{-31,9},{-24,9},{-24,14},{-6,14},{-6,9}}, color={0,0,127}));
-      connect(duodenum.TfR, serum.TfR_duodenum) annotation (Line(points={{-31,-21},{-26,-21},{-26,16},{0,16},{0,9}}, color={0,0,127}));
-      connect(otherOrgans.TfR, serum.TfR_otherOrgans) annotation (Line(points={{11,-35},{14,-35},{14,18},{6,18},{6,9}}, color={0,0,127}));
+      connect(liver.TfR, serum.TfR_liver) annotation (Line(points={{-31,9},{-28,
+              9},{-28,14},{-6,14},{-6,9}},                                                                   color={0,0,127}));
+      connect(duodenum.TfR, serum.TfR_duodenum) annotation (Line(points={{-31,-21},
+              {-24,-21},{-24,16},{0,16},{0,9}},                                                                      color={0,0,127}));
+      connect(otherOrgans.TfR, serum.TfR_otherOrgans) annotation (Line(points={{11,-35},
+              {16,-35},{16,20},{6,20},{6,9}},                                                                           color={0,0,127}));
       connect(erythropoietin.EPO, serum.EPO) annotation (Line(points={{63,-50},
               {-16,-50},{-16,-10.4},{-10.4,-10.4}},color={0,0,127}));
     end Test_Full;
