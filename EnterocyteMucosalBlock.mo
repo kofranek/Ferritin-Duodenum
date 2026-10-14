@@ -2131,6 +2131,7 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       Bodylight.Types.MassFlowRate Fe_output(
         displayUnit = "ug.h-1") "Fe ammount in serum: output";
 
+      Real Tf_saturation(unit = "1") "Transferrin saturation: serum iron against the capacity th, 1 = full";
       parameter Bodylight.Types.Mass th(
         displayUnit = "ug") = 2.6870 * 1e-9 "Threshold serum iron value (k26), 2.08/3.00";
       parameter Bodylight.Types.Frequency v_liv_1(
@@ -2176,6 +2177,11 @@ package EnterocyteMucosalBlock "Enterocyte mucosal block"
       // Transferrin-bound iron enters by TfR1; above the threshold th (transferrin saturated) the
       // non-transferrin-bound iron enters the liver by another way, which TfR1 does not limit.
       Liver_out = v_liv_1 * TfR_liver * min(Fe, th) + v_liv_2 * max(Fe - th, 0);
+      // What a student reads in a blood test: how full transferrin is. The model already carries
+      // the capacity as th -- above it the iron is not transferrin-bound -- so the saturation is
+      // the serum iron against it, full at 1. At the normal state it is 0.563, and the mouse
+      // measures 0.60 (Gardenghi 2014); after inflammation ours is 0.34 against their 0.31.
+      Tf_saturation = min(Fe, th) / th;
 
       BoneMarrow_out = (1 - EPO_regulation) * v_bm * Fe
         + EPO_regulation * v_bm * Fe_normal * (1 + K_bm) * EPO * (Fe / Fe_normal) / (K_bm + Fe / Fe_normal);
