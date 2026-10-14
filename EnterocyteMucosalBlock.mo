@@ -2406,6 +2406,10 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency v_spl_1(
         displayUnit = "h-1") = 0.0036035 / (60 * 60) "Spleen iron uptake rate from RBC (k10), 0.002 = value for trace exp., 0.004/0.005";
 
+      parameter Real blood_drawn(unit = "1") = 0
+        "Blood drawn so far, all draws together, each as a share of the blood there was (the application adds 0.1 per press)";
+      discrete Real blood_applied(start = 0, fixed = true) "Draws already taken from Fe";
+      parameter Real draw_check(unit = "s") = 60 "How often a new draw (a rise of blood_drawn) is looked for";
     initial equation
 
       der(Fe) = 0; // eq 13.
@@ -2418,6 +2422,13 @@ organs"),   Text(
       Fe_output = Spleen_out + Bleeding;
 
       der(Fe) = Fe_input - Fe_output;
+      // A blood draw (phlebotomy, as in Kautz 2014: 500 ul, a quarter of a mouse's blood): the red cells
+      // fall at once, so erythropoietin and erythroferrone rise within hours. Bleeding (a lasting flow)
+      // takes days to lower them. Done like an LPS dose: at the next check Fe loses what is new.
+      when sample(0, draw_check) then
+        blood_applied = blood_drawn;
+        reinit(Fe, Fe * (1 - max(0, min(1, blood_drawn - pre(blood_applied)))));
+      end when;
 
       annotation (Icon(coordinateSystem(preserveAspectRatio=false), graphics={
             Rectangle(
@@ -3209,6 +3220,8 @@ organs"),   Text(
         start = 0,
         fixed = true,
         displayUnit = "ug") "LPS doses already added to LPS";
+      parameter Bodylight.Types.MassFlowRate LPS_infusion(displayUnit = "ug/h") = 0
+        "LPS given continuously: a lasting (chronic) inflammation; 1 to 5 pg/h covers the whole range of the response";
       parameter Real LPS_check(unit = "s") = 60 "How often a new dose (a rise of LPS_given) is looked for";
       parameter Bodylight.Types.Frequency k_deg_LPS = 5.8560 / (60 * 60) "LPS degradation rate, 5.9/5.9";
 
@@ -3236,7 +3249,9 @@ organs"),   Text(
 
     equation
 
-      der(LPS) = -k_deg_LPS * LPS;
+      // A dose wears off within hours (half-life about 7 min, IL-6 mRNA saturates at 2.6e-15 kg);
+      // a lasting inflammation needs LPS given all the time.
+      der(LPS) = -k_deg_LPS * LPS + LPS_infusion;
 
       // A dose: LPS_given rises (the application adds 1 ug per press), and at the next check LPS
       // grows by what is new. LPS stays a state, as in Enculescu; LPS = LPS_given - LPS_degraded
