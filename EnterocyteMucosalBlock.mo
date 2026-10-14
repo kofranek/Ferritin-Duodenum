@@ -2522,6 +2522,10 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_deg(
         displayUnit="h-1") = 0.055363 * 0.054621 / (60 * 60) "Fpnspl degradation rate (k12*k18, k18 = 0.054621), 0.0007/0.0038";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.014027 * 1e9 "Constant Fpn_spl production (k27), 0.005/0.028";
+      parameter Real local_gain = 1
+        "Strength of the cell's own iron regulation (IRP/IRE), both ferroportin and TfR1: 1 - Enculescu";
+      parameter Bodylight.Types.Mass Fe_start(fixed = false, displayUnit = "ug")
+        "Iron at the start (steady state), the point local_gain turns the response about";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.4694 * 1e9 "Constant Fpnspl degradation (k13*k19, k19 = 4.4694), 9.2/73.7";
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
@@ -2536,6 +2540,7 @@ organs"),   Text(
     initial equation
 
       der(Fe) = 0;
+      Fe_start = Fe;
       der(FPN) = 0;
       der(FPN_mRNA) = 0;
 
@@ -2548,7 +2553,10 @@ organs"),   Text(
       Fe_input = RBC_in + BoneMarrow_in;
       Fe_output = Serum_out;
 
-      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      // local_gain scales the sensor; the ratio of the two Fe_start terms keeps the normal
+      // steady state exactly where it was, so only the slope of the response changes.
+      FPN_synthesis = k_synth * (1 + local_gain * k_Fe * Fe)
+        * (1 + k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe_start) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
 
       der(FPN) = FPN_synthesis - FPN_degradation;
@@ -2656,6 +2664,8 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_deg(
         displayUnit="h-1") = 0.055363 / (60 * 60) "Fpnliv degradation rate (k12), 0.01/0.06";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.0033177 * 1e9 "Constant Fpn_liv production (k17), 0.002/0.006";
+      parameter Real local_gain = 1
+        "Strength of the cell's own iron regulation (IRP/IRE), both ferroportin and TfR1: 1 - Enculescu";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 1e9 "Constant Fpnliv degradation (k13), 2.11/12.93";
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
@@ -2689,7 +2699,10 @@ organs"),   Text(
 
       der(Fe) = Serum_in - Serum_out;
 
-      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      // local_gain scales the sensor; the ratio of the two Fe_start terms keeps the normal
+      // steady state exactly where it was, so only the slope of the response changes.
+      FPN_synthesis = k_synth * (1 + local_gain * k_Fe * Fe)
+        * (1 + k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe_start) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
 
       der(FPN) = FPN_synthesis - FPN_degradation;
@@ -2698,7 +2711,7 @@ organs"),   Text(
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
       // Transferrin receptors: the same IRP/IRE sensor as ferroportin, the opposite sign.
       // The rise above normal saturates towards TfR_max; the fall is not limited.
-      TfR_target = (1 + k_Fe * Fe_start) / (1 + k_Fe * Fe);
+      TfR_target = (1 + local_gain * k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe);
       der(TfR_cell) = (noEvent(if TfR_target <= 1 then TfR_target
           else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR_cell) / tau_TfR;
       // The switch acts at once, like EPO_regulation and ERFE_regulation: off, uptake is the original
@@ -2823,6 +2836,10 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_deg(
         displayUnit="h-1") = 0.055363 * 0.3815 / (60 * 60) "Fpnduo degradation rate (k12*k15, k15 = 0.3815), 0.0056/0.147";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.16007 * 1e9 "Constant Fpn_duo production (k46), 0.06/0.49";
+      parameter Real local_gain = 1
+        "Strength of the cell's own iron regulation (IRP/IRE), both ferroportin and TfR1: 1 - Enculescu";
+      parameter Bodylight.Types.Mass Fe_start(displayUnit = "ug") = 2.97118 * 1e-9
+        "Iron at the start; fixed, because the duodenum has no steady-state initial equations";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 0.55631 * 1e9 "Constant Fpnduo degradation (k13*k16, k16 = 0.55631), 0.78/4.16";
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
@@ -2858,7 +2875,10 @@ organs"),   Text(
       Fe_output = Serum_out + Fe_loss;
       Fe_stool = Food_in - Fe_absorption + Fe_loss;
 
-      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      // local_gain scales the sensor; the ratio of the two Fe_start terms keeps the normal
+      // steady state exactly where it was, so only the slope of the response changes.
+      FPN_synthesis = k_synth * (1 + local_gain * k_Fe * Fe)
+        * (1 + k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe_start) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
 
       der(FPN) = FPN_synthesis - FPN_degradation;
@@ -2982,6 +3002,8 @@ organs"),   Text(
       parameter Bodylight.Types.Frequency k_deg(
         displayUnit="h-1") = 0.055363 * 0.52232 / (60 * 60) "Fpnres degradation rate (k12*k38, k38 = 0.52232), 0.025/0.129";
       parameter BodylightExtension.Types.ReverseMass k_Fe = 0.11376 * 1e9 "Constant Fpn_res production (k47), 0.004/0.152";
+      parameter Real local_gain = 1
+        "Strength of the cell's own iron regulation (IRP/IRE), both ferroportin and TfR1: 1 - Enculescu";
       parameter BodylightExtension.Types.ReverseMass k_hep = 2.5743 * 4.5163 * 1e9 "Constant Fpnres degradation (k13*k39, k39 = 4.5163), 3.7/38.1";
 
       Bodylight.Types.MassFlowRate FPN_mRNA_synthesis "FPN synthesis";
@@ -3019,7 +3041,10 @@ organs"),   Text(
       Fe_input = Serum_in;
       Fe_output = Serum_out + Fe_loss;
 
-      FPN_synthesis = k_synth * (1 + k_Fe * Fe) * FPN_mRNA;
+      // local_gain scales the sensor; the ratio of the two Fe_start terms keeps the normal
+      // steady state exactly where it was, so only the slope of the response changes.
+      FPN_synthesis = k_synth * (1 + local_gain * k_Fe * Fe)
+        * (1 + k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe_start) * FPN_mRNA;
       FPN_degradation = k_deg * (1 + k_hep * hep) * FPN;
 
       der(FPN) = FPN_synthesis - FPN_degradation;
@@ -3028,7 +3053,7 @@ organs"),   Text(
       FPN_mRNA_degradation = k_mRNA_deg * FPN_mRNA;
       // Transferrin receptors: the same IRP/IRE sensor as ferroportin, the opposite sign.
       // The rise above normal saturates towards TfR_max; the fall is not limited.
-      TfR_target = (1 + k_Fe * Fe_start) / (1 + k_Fe * Fe);
+      TfR_target = (1 + local_gain * k_Fe * Fe_start) / (1 + local_gain * k_Fe * Fe);
       der(TfR_cell) = (noEvent(if TfR_target <= 1 then TfR_target
           else 1 + (TfR_max - 1) * (TfR_target - 1) / (TfR_target - 1 + TfR_max - 1)) - TfR_cell) / tau_TfR;
       // The switch acts at once, like EPO_regulation and ERFE_regulation: off, uptake is the original
@@ -3420,15 +3445,17 @@ organs"),   Text(
     model Test_Full
       extends Modelica.Icons.Example;
       parameter Real TfR_regulation = 1 "Uptake from transferrin follows TfR1 in liver and other organs: 1 - yes, 0 - no (Enculescu)";
+      parameter Real local_gain = 1
+        "Strength of the cell's own iron regulation in every organ: 1 - Enculescu, more - a steeper ferroportin and TfR1 response";
       Serum serum
         annotation (Placement(transformation(extent={{-10,-12},{10,8}})));
-      Liver liver(TfR_regulation = TfR_regulation)
+      Liver liver(TfR_regulation = TfR_regulation, local_gain = local_gain)
         annotation (Placement(transformation(extent={{-52,2},{-32,22}})));
-      Spleen spleen
+      Spleen spleen(local_gain = local_gain)
         annotation (Placement(transformation(extent={{22,16},{42,36}})));
-      Duodenum duodenum
+      Duodenum duodenum(local_gain = local_gain)
         annotation (Placement(transformation(extent={{-52,-28},{-32,-8}})));
-      OtherOrgans otherOrgans(TfR_regulation = TfR_regulation)
+      OtherOrgans otherOrgans(TfR_regulation = TfR_regulation, local_gain = local_gain)
         annotation (Placement(transformation(extent={{-10,-42},{10,-22}})));
       BoneMarrow boneMarrow
         annotation (Placement(transformation(extent={{26,-40},{46,-20}})));
